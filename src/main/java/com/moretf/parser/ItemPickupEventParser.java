@@ -13,9 +13,10 @@ public class ItemPickupEventParser implements LogLineParser {
 
     private static final Pattern PATTERN = Pattern.compile(
             "L (\\d+/\\d+/\\d+ - \\d+:\\d+:\\d+): " +
-                    "\"(.+?)<\\d+><(\\[U:1:\\d+\\])><(Red|Blue)>\" picked up item \"(.*?)\""
+                    "\"(.+?)<\\d+><(\\[U:1:\\d+\\])><(Red|Blue)>\" " +
+                    "picked up item \"(.*?)\"" +
+                    "(?: \\(healing \"(\\d+)\"\\))?"
     );
-
     @Override
     public boolean matches(String line) {
         return PATTERN.matcher(line).find();
@@ -31,6 +32,12 @@ public class ItemPickupEventParser implements LogLineParser {
         String actorSteam = m.group(3);
         String actorTeam = m.group(4);
         String item = m.group(5);
+        String healingStr  = m.group(6);
+
+        Integer healing = null;
+        if (healingStr != null) {
+            healing = Integer.parseInt(healingStr);
+        }
 
         return new LogEvent(
                 eventId,
@@ -46,7 +53,7 @@ public class ItemPickupEventParser implements LogLineParser {
                 null,
                 null,
                 null,
-                null,
+                healing,
                 item,
                 null,
                 null,

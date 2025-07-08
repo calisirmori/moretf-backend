@@ -14,9 +14,9 @@ import java.util.List;
 @Service
 public class SummaryAggregatorService {
 
-    public MatchJsonResult buildMatchJson(List<LogEvent> events, int id) {
+    public MatchJsonResult buildMatchJson(List<LogEvent> events, int logId) {
         List<PlayerSummary> players = PlayerSummaryBuilder.build(events);
-        MatchSummary matchSummary = MatchSummaryBuilder.build(events, id);
+        MatchSummary matchSummary = MatchSummaryBuilder.build(events, logId);
         List<ChatMessage> chatMessages = ChatMessagesBuilder.build(events);
         return new MatchJsonResult(matchSummary, players, events, chatMessages);
     }
