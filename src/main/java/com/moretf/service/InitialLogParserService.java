@@ -40,4 +40,29 @@ public class InitialLogParserService {
         }
         return events;
     }
+
+    public List<LogEvent> parseFromResourceZipFile(InputStream inputStream) {
+        List<LogEvent> events = new ArrayList<>();
+
+        try (ZipInputStream zis = new ZipInputStream(inputStream);
+             BufferedReader reader = new BufferedReader(new InputStreamReader(zis, StandardCharsets.UTF_8))) {
+
+            zis.getNextEntry(); // Open the first entry inside the zip
+
+            String line;
+            int eventCounter = 1;
+            while ((line = reader.readLine()) != null) {
+                LogEvent event = parsingManager.parse(line, eventCounter++);
+                if (event != null) {
+                    events.add(event);
+                }
+            }
+
+        } catch (IOException e) {
+            throw new RuntimeException("Error parsing from input stream", e);
+        }
+
+        return events;
+    }
+
 }

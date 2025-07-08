@@ -29,6 +29,7 @@ public class MatchSummaryBuilder {
                 case "round_start":
                     roundStart = event.getTimestamp();
                     if(matchStartTime == null) matchStartTime = roundStart;
+                    roundPauseTime = 0;
                     break;
 
                 case "round_win":

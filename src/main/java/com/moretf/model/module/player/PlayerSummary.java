@@ -34,6 +34,7 @@ public class PlayerSummary {
     private Map<String, Integer> healingDoneSpread = new HashMap<>();
     private Map<String, Integer> killSpread = new HashMap<>();
     private Map<String, Integer> deathSpread = new HashMap<>();
+    private int totalTime;
 
     public PlayerSummary(String name, String steamId, String team) {
         this.name = name;
@@ -59,6 +60,7 @@ public class PlayerSummary {
         this.healingDoneSpread = new HashMap<>();
         this.killSpread = new HashMap<>();
         this.deathSpread = new HashMap<>();
+        this.totalTime = 0;
     }
 
     public void incrementKills() {

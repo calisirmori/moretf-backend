@@ -2,6 +2,7 @@ package com.moretf.model.module.player;
 
 import com.moretf.model.LogEvent;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class PlayerSummaryBuilder {
     public static List<PlayerSummary> build(List<LogEvent> events) {
@@ -277,9 +278,30 @@ public class PlayerSummaryBuilder {
                 }
 
                 player.setClassStartTime(-1);
+
+                // Determine most played class and total combined playtime
+                String mostPlayedClass = "unknown";
+                int maxTime = 0;
+                int totalCombinedTime = 0;
+
+                for (Map.Entry<String, ClassStats> entry : player.getClassStats().entrySet()) {
+                    int classTime = entry.getValue().getTotalTime();
+                    totalCombinedTime += classTime;
+
+                    if (classTime > maxTime) {
+                        maxTime = classTime;
+                        mostPlayedClass = entry.getKey();
+                    }
+                }
+
+                player.setCharacter(mostPlayedClass);
+                player.setTotalTime(totalCombinedTime);
             }
         }
 
-        return new ArrayList<>(players.values());
+
+        return players.values().stream()
+                .filter(player -> player.getTotalTime() >= 10)
+                .collect(Collectors.toList());
     }
 }
