@@ -29,6 +29,9 @@ public class ApiKeyController {
             throw new IllegalArgumentException("userId is required");
         }
 
+        // ❗ Deactivate all old active keys for this user
+        apiKeyRepository.deactivateAllByUserId(userId);
+
         // Generate secure key
         String rawKey = generateSecureToken(32);
         String keyHash = BCrypt.hashpw(rawKey, BCrypt.gensalt());
@@ -46,6 +49,7 @@ public class ApiKeyController {
         response.put("apiKey", rawKey); // Show only once!
         return response;
     }
+
 
     private String generateSecureToken(int byteLength) {
         SecureRandom secureRandom = new SecureRandom();
