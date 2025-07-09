@@ -71,6 +71,12 @@
 			<version>2.25.32</version> <!-- Use latest stable if possible -->
 		</dependency>
 
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>dynamodb</artifactId>
+			<version>2.25.33</version> <!-- or latest stable -->
+		</dependency>
+
 		<!-- AWS SDK v2 (Secrets Manager + Core + Region Support) -->
 		<dependency>
 			<groupId>software.amazon.awssdk</groupId>

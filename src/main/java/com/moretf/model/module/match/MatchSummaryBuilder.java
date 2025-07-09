@@ -1,14 +1,23 @@
 package com.moretf.model.module.match;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.moretf.LogMetaData.LogSummary;
 import com.moretf.client.LogsTfApiClient;
 import com.moretf.model.LogEvent;
+import com.moretf.repository.LogSummaryRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 import java.util.*;
 
+@Service
+@RequiredArgsConstructor
 public class MatchSummaryBuilder {
 
-    public static MatchSummary build(List<LogEvent> events, int logId) {
+    private final LogSummaryRepository logSummaryRepository;
+
+    public MatchSummary build(List<LogEvent> events, int logId, String title, String map) {
+
         Map<Integer, RoundInfo> rounds = new LinkedHashMap<>();
 
         int gameOverEvents = 0;
@@ -67,9 +76,35 @@ public class MatchSummaryBuilder {
 
         String matchWinner = bluScore > redScore ? "Blu" : redScore > bluScore ? "Red" : "Tie";
 
-        JsonNode info = LogsTfApiClient.fetchLogInfo(logId);
-        String title = info.get("title").asText();
-        String map = info.get("map").asText();
+        // Step 1: Try from RDS logs table
+        if (title == null || title.isBlank() || map == null || map.isBlank()) {
+            try {
+                Optional<LogSummary> optional = logSummaryRepository.findById((long) logId);
+                if (optional.isPresent()) {
+                    LogSummary summary = optional.get();
+                    if ((title == null || title.isBlank()) && summary.getTitle() != null) {
+                        title = summary.getTitle();
+                    }
+                    if ((map == null || map.isBlank()) && summary.getMap() != null) {
+                        map = summary.getMap();
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("Warning: failed to fetch title/map from DB for logId " + logId);
+            }
+
+//            // Step 2: Fallback to Logs.tf API
+//            if (title == null || title.isBlank() || map == null || map.isBlank()) {
+//                JsonNode info = LogsTfApiClient.fetchLogInfo(logId);
+//                if (title == null || title.isBlank()) {
+//                    title = info.get("title").asText();
+//                }
+//                if (map == null || map.isBlank()) {
+//                    map = info.get("map").asText();
+//                }
+//            }
+        }
+
 
         return new MatchSummary(
                 logId,

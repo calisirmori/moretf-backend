@@ -13,19 +13,35 @@ import com.moretf.model.module.player.PlayerSummary;
 import com.moretf.model.module.player.PlayerSummaryBuilder;
 import com.moretf.model.module.timeline.IntervalStat;
 import com.moretf.model.module.timeline.TimelineBuilder;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class SummaryAggregatorService {
 
-    public MatchJsonResult buildMatchJson(List<LogEvent> events, int logId) {
+    private final MatchSummaryBuilder matchSummaryBuilder;
+
+    public MatchJsonResult buildMatchJson(List<LogEvent> events, int logId, String title, String map) {
         List<PlayerSummary> players = PlayerSummaryBuilder.build(events);
-        MatchSummary matchSummary = MatchSummaryBuilder.build(events, logId);
+        MatchSummary matchSummary = matchSummaryBuilder.build(events, logId, title, map);
         List<ChatMessage> chatMessages = ChatMessagesBuilder.build(events);
         List<LogEvent> killEvents = KillEventsBuilder.build(events);
         List<IntervalStat> timeline = TimelineBuilder.build(events);
         List<TeamFightSummary> teamFights = TeamFightSummaryBuilder.build(events);
         return new MatchJsonResult(matchSummary, players, events, chatMessages, killEvents, timeline, teamFights);
+    }
+
+    public MatchJsonResult buildMatchJsonWithoutEvents(List<LogEvent> events, int logId, String title, String map) {
+        List<PlayerSummary> players = PlayerSummaryBuilder.build(events);
+        MatchSummary matchSummary = matchSummaryBuilder.build(events, logId, title, map);
+        List<ChatMessage> chatMessages = ChatMessagesBuilder.build(events);
+        List<LogEvent> killEvents = KillEventsBuilder.build(events);
+        List<IntervalStat> timeline = TimelineBuilder.build(events);
+        List<TeamFightSummary> teamFights = TeamFightSummaryBuilder.build(events);
+
+        // Empty event list
+        return new MatchJsonResult(matchSummary, players, List.of(), chatMessages, killEvents, timeline, teamFights);
     }
 }
