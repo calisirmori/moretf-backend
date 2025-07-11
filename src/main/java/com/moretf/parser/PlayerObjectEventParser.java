@@ -36,29 +36,15 @@ public class PlayerObjectEventParser implements LogLineParser {
         String objectName = m.group(6);
         String position = m.group(7);
 
-        return new LogEvent(
-                eventId,
-                convertToEpoch(timestamp),
-                new LogEvent.Actor(actorName, actorSteam, actorTeam),
-                line,
-                eventType,
-                null,
-                objectName,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                Map.of("position", position)
-        );
+        return LogEvent.builder()
+                .eventId(eventId)
+                .timestamp(convertToEpoch(m.group(1)))
+                .actor(new LogEvent.Actor(m.group(2), m.group(3), m.group(4)))
+                .raw(line)
+                .eventType(eventType)
+                .weapon(objectName)
+                .position(position)
+                .build();
     }
 
     private long convertToEpoch(String ts) {

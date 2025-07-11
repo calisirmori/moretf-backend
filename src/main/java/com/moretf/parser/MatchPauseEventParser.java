@@ -29,41 +29,17 @@ public class MatchPauseEventParser implements LogLineParser {
 
         String eventName = m.group(5); // matchpause or matchunpause
 
-        return new LogEvent(
-                eventId,
-                convertToEpoch(m.group(1)),
-                new LogEvent.Actor(m.group(2), sanitizeSteamId(m.group(3)), m.group(4)),
-                line,
-                eventName,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
-        );
+        return LogEvent.builder()
+                .eventId(eventId)
+                .timestamp(convertToEpoch(m.group(1)))
+                .actor(new LogEvent.Actor(m.group(2), m.group(3), m.group(4)))
+                .raw(line)
+                .eventType(eventName)
+                .build();
     }
 
     private long convertToEpoch(String ts) {
         return LocalDateTime.parse(ts, DateTimeFormatter.ofPattern("MM/dd/yyyy - HH:mm:ss"))
                 .toInstant(ZoneOffset.UTC).toEpochMilli();
-    }
-
-    private String sanitizeSteamId(String rawId) {
-        if (rawId == null) return null;
-        String cleaned = rawId.trim();
-        if (!cleaned.startsWith("[U:1:")) cleaned = "[U:1:" + cleaned.replaceAll("[^\\d]", "");
-        if (!cleaned.endsWith("]")) cleaned += "]";
-        return cleaned;
     }
 }

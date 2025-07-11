@@ -25,15 +25,28 @@ public class PlayerSummary {
     private double totalUberLength;
     private Map<String, Integer> itemPickups = new HashMap<>();
     private int headShots;
+    private int backStabs;
+    private int captures;
+    private int objectsBuilt;
+    private int objectsDestroyed;
+    private int airShots;
+    private int deathsBeforeUber;
+    private int deathsDuringUber;
     private String character;
     private Map<String, ClassStats> classStats = new HashMap<>();
     private long classStartTime;
+
     private Map<String, Integer> healedBySource = new HashMap<>();
     private Map<String, Integer> damageDealtSpread = new HashMap<>();
     private Map<String, Integer> damageTakenSpread = new HashMap<>();
     private Map<String, Integer> healingDoneSpread = new HashMap<>();
     private Map<String, Integer> killSpread = new HashMap<>();
     private Map<String, Integer> deathSpread = new HashMap<>();
+
+    private Map<String, Integer> killsByClass = new HashMap<>();
+    private Map<String, Integer> assistByClass = new HashMap<>();
+    private Map<String, Integer> deathsByClass = new HashMap<>();
+
     private int totalTime;
 
     public PlayerSummary(String name, String steamId, String team) {
@@ -52,6 +65,14 @@ public class PlayerSummary {
         this.nearChargeDeaths = 0;
         this.totalUberLength = 0.0;
         this.headShots = 0;
+        this.backStabs = 0;
+        this.captures = 0;
+        this.objectsBuilt = 0;
+        this.objectsDestroyed = 0;
+        this.airShots = 0;
+        this.objectsDestroyed = 0;
+        this.deathsBeforeUber = 0;
+        this.deathsDuringUber = 0;
         this.character = "unknown";
         this.classStartTime = -1;
         this.healedBySource = new HashMap<>();
@@ -106,4 +127,26 @@ public class PlayerSummary {
     public void incrementHeadShots(){
         this.headShots++;
     }
+
+    public void incrementBackStabs(){
+        this.backStabs++;
+    }
+
+    public void incrementCaptures(){
+        this.captures++;
+    }
+
+    public void incrementObjectsBuilt(){
+        this.objectsBuilt++;
+    }
+
+    public void incrementObjectsDestroyed() { this.objectsDestroyed++; }
+
+    public void incrementAirShots(){
+        this.airShots++;
+    }
+
+    public void incrementDeathsBeforeUber(){this.deathsBeforeUber++;}
+
+    public void incrementDeathsDuringUber(){this.deathsDuringUber++;}
 }

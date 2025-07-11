@@ -16,6 +16,8 @@ import java.util.zip.ZipInputStream;
 @RequiredArgsConstructor
 public class LogParserService {
 
+
+
     private final LogEventParsingManager parsingManager;
     private final S3Client s3Client;
 

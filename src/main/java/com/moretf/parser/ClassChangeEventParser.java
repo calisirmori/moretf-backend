@@ -27,35 +27,20 @@ public class ClassChangeEventParser implements LogLineParser {
         Matcher matcher = PATTERN.matcher(line);
         if (!matcher.find()) return null;
 
-        String timestamp = matcher.group(1);
+        String timestampStr = matcher.group(1);
         String actorName = matcher.group(2);
         String actorSteam = matcher.group(3);
         String actorTeam = matcher.group(4);
         String className = matcher.group(5);
 
-        return new LogEvent(
-                eventId,
-                convertToEpoch(timestamp),
-                new LogEvent.Actor(actorName, actorSteam, actorTeam),
-                line,
-                "class_change",
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                className,
-                null,
-                null
-        );
+        return LogEvent.builder()
+                .eventId(eventId)
+                .timestamp(convertToEpoch(timestampStr))
+                .actor(new LogEvent.Actor(actorName, actorSteam, actorTeam))
+                .raw(line)
+                .eventType("class_change")
+                .character(className)
+                .build();
     }
 
     private long convertToEpoch(String ts) {

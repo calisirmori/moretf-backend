@@ -22,29 +22,14 @@ public class NameChangeEventParser implements LogLineParser {
         Matcher m = PATTERN.matcher(line);
         if (!m.find()) return null;
 
-        return new LogEvent(
-                eventId,
-                convertToEpoch(m.group(1)),
-                new LogEvent.Actor(m.group(2), m.group(3), m.group(4)),
-                line,
-                "name_change",
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                m.group(5),
-                null,
-                null,
-                null
-        );
+        return LogEvent.builder()
+                .eventId(eventId)
+                .timestamp(convertToEpoch(m.group(1)))
+                .actor(new LogEvent.Actor(m.group(2), m.group(3), m.group(4)))
+                .raw(line)
+                .eventType("name_change")
+                .newName(m.group(5))
+                .build();
     }
 
     private long convertToEpoch(String ts) {

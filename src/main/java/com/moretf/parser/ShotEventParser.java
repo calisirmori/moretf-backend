@@ -34,30 +34,14 @@ public class ShotEventParser implements LogLineParser {
         String eventType = m.group(5);  // "shot_fired" or "shot_hit"
         String weapon = m.group(6);
 
-        return new LogEvent(
-                eventId,
-                convertToEpoch(timestampStr),
-                new LogEvent.Actor(actorName, actorSteam, actorTeam),
-                line,
-                eventType,
-                null,
-                weapon,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
-
-        );
+        return LogEvent.builder()
+                .eventId(eventId)
+                .timestamp(convertToEpoch(m.group(1)))
+                .actor(new LogEvent.Actor(m.group(2), m.group(3), m.group(4)))
+                .raw(line)
+                .eventType(eventType)
+                .weapon(weapon)
+                .build();
     }
 
     private long convertToEpoch(String ts) {

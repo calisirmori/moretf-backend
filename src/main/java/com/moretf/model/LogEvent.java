@@ -3,6 +3,7 @@ package com.moretf.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -11,7 +12,8 @@ import java.util.Map;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class LogEvent {
     private Integer eventId;
     private long timestamp;
@@ -36,8 +38,14 @@ public class LogEvent {
     private String newName;
     private String character;
     private String address;
-
-    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String customkill;
+    private String attackerPosition;
+    private String assistPosition;
+    private String victimPosition;
+    private String customKill;
+    private Integer uberPercentage;
+    private String position;
+    private String team;
     private Map<String, Object> extras;
 
     @Data
@@ -58,3 +66,4 @@ public class LogEvent {
         private String team;
     }
 }
+

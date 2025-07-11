@@ -59,29 +59,14 @@ public class WorldEventParser implements LogLineParser {
             extras.put("reason", reason);
         }
 
-        return new LogEvent(
-                eventId,
-                convertToEpoch(timestampStr),
-                null, // No actor
-                line,
-                eventType.toLowerCase(), // "round_overtime", "round_win", "round_length"
-                null,
-                null,
-                null,
-                null,
-                null,
-                reason,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                extras
-        );
+        return LogEvent.builder()
+                .eventId(eventId)
+                .timestamp(convertToEpoch(m.group(1)))
+                .raw(line)
+                .eventType(eventType.toLowerCase())
+                .reason(reason)
+                .extras(extras)
+                .build();
     }
 
     private long convertToEpoch(String ts) {

@@ -23,7 +23,6 @@ import java.util.zip.ZipOutputStream;
 public class LogEventParsingManager {
     private final List<LogLineParser> parsers;
     private final List<LogEvent> parsedEvents = new ArrayList<>();
-
     public LogEventParsingManager() {
         this.parsers = List.of(
                 new DamageEventParser(),
@@ -90,8 +89,6 @@ public class LogEventParsingManager {
                 || line.contains("Panacea check - Distance from top spawner:")
                 || line.contains("[SteamNetworkingSockets]")
                 || line.contains("_catapult2\" with the jack")
-                || line.contains("Panacea check - Distance from top spawner:")
-                || line.contains("Panacea check - Distance from top spawner:")
 
         ) {
             return null;

@@ -29,29 +29,13 @@ public class TeamTriggerEventParser implements LogLineParser {
         String team = m.group(2);
         String triggered = m.group(3);
 
-        return new LogEvent(
-                eventId,
-                convertToEpoch(timestampStr),
-                null,
-                line,
-                triggered.toLowerCase(),  // e.g. intermission_win_limit
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                Map.of("team", team)
-        );
+        return LogEvent.builder()
+                .eventId(eventId)
+                .timestamp(convertToEpoch(m.group(1)))
+                .raw(line)
+                .eventType(triggered.toLowerCase())
+                .team(team)
+                .build();
     }
 
     private long convertToEpoch(String ts) {

@@ -26,40 +26,17 @@ public class PlayerExtinguishedEventParser implements LogLineParser {
         Matcher m = PATTERN.matcher(line);
         if (!m.find()) return null;
 
-        String timestampStr = m.group(1);
-        String actorName = m.group(2);
-        String actorSteam = m.group(3);
-        String actorTeam = m.group(4);
-
-        String targetName = m.group(5);
-        String targetSteam = m.group(6);
-        String targetTeam = m.group(7);
-
         String weapon = m.group(8);
 
-        return new LogEvent(
-                eventId,
-                convertToEpoch(timestampStr),
-                new LogEvent.Actor(actorName, actorSteam, actorTeam),
-                line,
-                "player_extinguished",
-                new LogEvent.Target(targetName, targetSteam, targetTeam),
-                weapon,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
-        );
+        return LogEvent.builder()
+                .eventId(eventId)
+                .timestamp(convertToEpoch(m.group(1)))
+                .actor(new LogEvent.Actor(m.group(2), m.group(3), m.group(4)))
+                .target(new LogEvent.Target(m.group(5), m.group(6), m.group(7)))
+                .raw(line)
+                .eventType("player_extinguished")
+                .weapon(weapon)
+                .build();
     }
 
     private long convertToEpoch(String ts) {

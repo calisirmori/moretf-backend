@@ -31,32 +31,16 @@ public class SuicideEventParser implements LogLineParser {
         LogEvent.Target target = new LogEvent.Target(m.group(2), m.group(3), m.group(4));
         String weapon = m.group(5);
 
-        Map<String, Object> extras = new HashMap<>();
-        extras.put("attacker_position", m.group(6));
-
-        return new LogEvent(
-                eventId,
-                convertToEpoch(m.group(1)),
-                actor,
-                line,
-                "suicide",
-                target,
-                weapon,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                extras
-        );
+        return LogEvent.builder()
+                .eventId(eventId)
+                .timestamp(convertToEpoch(m.group(1)))
+                .actor(actor)
+                .target(target)
+                .raw(line)
+                .eventType("suicide")
+                .weapon(weapon)
+                .attackerPosition(m.group(6))
+                .build();
     }
 
     private long convertToEpoch(String ts) {

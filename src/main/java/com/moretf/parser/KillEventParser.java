@@ -13,11 +13,10 @@ import java.util.regex.Pattern;
 public class KillEventParser implements LogLineParser {
 
     private static final Pattern PATTERN = Pattern.compile(
-            "L (\\d+/\\d+/\\d+ - \\d+:\\d+:\\d+): " + // timestamp
-                    "\"(.+?)<\\d+><(\\[U:1:\\d+\\])><(Red|Blue|Unassigned)>\" killed " + // actor
-                    "\"(.+?)<\\d+><(\\[U:1:\\d+\\])><(Red|Blue|Unassigned)>\" with \"(.*?)\"" + // target & weapon
-                    "(?: \\(attacker_position \"(.*?)\"\\))?" + // optional attacker_position
-                    "(?: \\(victim_position \"(.*?)\"\\))?" // optional victim_position
+            "L (\\d+/\\d+/\\d+ - \\d+:\\d+:\\d+): " +
+                    "\"(.+?)<\\d+><(\\[U:1:\\d+\\])><(Red|Blue|Unassigned)>\" killed " +
+                    "\"(.+?)<\\d+><(\\[U:1:\\d+\\])><(Red|Blue|Unassigned)>\" with \"(.*?)\"" +
+                    "(.*)" // group 9: extras
     );
 
     @Override
@@ -40,36 +39,42 @@ public class KillEventParser implements LogLineParser {
         String targetTeam = m.group(7);
 
         String weapon = m.group(8);
-        String attackerPos = m.group(9);
-        String victimPos = m.group(10);
+        String extrasRaw = m.group(9);
 
         Map<String, Object> extras = new HashMap<>();
-        if (attackerPos != null) extras.put("attacker_position", attackerPos);
-        if (victimPos != null) extras.put("victim_position", victimPos);
+        String attackerPosition = null;
+        String victimPosition = null;
+        String customKill = null;
 
-        return new LogEvent(
-                eventId,
-                convertToEpoch(timestampStr),
-                new LogEvent.Actor(actorName, actorSteam, actorTeam),
-                line,
-                "kill",
-                new LogEvent.Target(targetName, targetSteam, targetTeam),
-                weapon,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                extras
-        );
+        Pattern kvPattern = Pattern.compile("\\(([^\\s]+)\\s+\"([^\"]*)\"\\)");
+        Matcher extraMatcher = kvPattern.matcher(extrasRaw);
+        while (extraMatcher.find()) {
+            String key = extraMatcher.group(1);
+            String value = extraMatcher.group(2);
+            if ("attacker_position".equals(key)) {
+                attackerPosition = value;
+            } else if ("victim_position".equals(key)) {
+                victimPosition = value;
+            } else if ("customkill".equals(key)) {
+                customKill = value;
+            } else {
+                extras.put(key, value);
+            }
+        }
+
+        return LogEvent.builder()
+                .eventId(eventId)
+                .timestamp(convertToEpoch(timestampStr))
+                .actor(new LogEvent.Actor(actorName, actorSteam, actorTeam))
+                .target(new LogEvent.Target(targetName, targetSteam, targetTeam))
+                .raw(line)
+                .eventType("kill")
+                .weapon(weapon)
+                .attackerPosition(attackerPosition)
+                .victimPosition(victimPosition)
+                .customkill(customKill)
+                .extras(!extras.isEmpty() ? extras : null)
+                .build();
     }
 
     private long convertToEpoch(String ts) {

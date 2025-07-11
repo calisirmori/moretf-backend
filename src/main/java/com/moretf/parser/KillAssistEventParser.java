@@ -50,29 +50,15 @@ public class KillAssistEventParser implements LogLineParser {
         if (attackerPos != null) extras.put("attacker_position", attackerPos);
         if (victimPos != null) extras.put("victim_position", victimPos);
 
-        return new LogEvent(
-                eventId,
-                convertToEpoch(timestampStr),
-                new LogEvent.Actor(actorName, actorSteam, actorTeam),
-                line,
-                "kill_assist",
-                new LogEvent.Target(targetName, targetSteam, targetTeam),
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                extras
-        );
+        return LogEvent.builder()
+                .eventId(eventId)
+                .timestamp(convertToEpoch(timestampStr))
+                .actor(new LogEvent.Actor(actorName, actorSteam, actorTeam))
+                .target(new LogEvent.Target(targetName, targetSteam, targetTeam))
+                .raw(line)
+                .eventType("kill_assist")
+                .extras(extras)
+                .build();
     }
 
     private long convertToEpoch(String ts) {

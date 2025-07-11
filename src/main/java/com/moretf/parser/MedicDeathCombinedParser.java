@@ -45,55 +45,28 @@ public class MedicDeathCombinedParser implements LogLineParser {
     }
 
     private LogEvent parseMedicDeath(Matcher m, String line, int eventId) {
-        return new LogEvent(
-                eventId,
-                convertToEpoch(m.group(1)),
-                new LogEvent.Actor(m.group(2), m.group(3), m.group(4)),
-                line,
-                "medic_death",
-                new LogEvent.Target(m.group(5), m.group(6), m.group(7)),
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                Integer.parseInt(m.group(8)),
-                null,
-                null,
-                m.group(9),
-                null,
-                null,
-                null,
-                null
-        );
+        return LogEvent.builder()
+                .eventId(eventId)
+                .timestamp(convertToEpoch(m.group(1)))
+                .actor(new LogEvent.Actor(m.group(2), m.group(3), m.group(4)))
+                .target(new LogEvent.Target(m.group(5), m.group(6), m.group(7)))
+                .raw(line)
+                .eventType("medic_death")
+                .healing(Integer.parseInt(m.group(8)))
+                .ubercharge(m.group(9))
+                .build();
     }
 
     private LogEvent parseMedicDeathEx(Matcher m, String line, int eventId) {
-        return new LogEvent(
-                eventId,
-                convertToEpoch(m.group(1)),
-                new LogEvent.Actor(m.group(2), m.group(3), m.group(4)),
-                line,
-                "medic_death_ex",
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                Map.of("uberpct", m.group(5))
-        );
+
+        return LogEvent.builder()
+                .eventId(eventId)
+                .timestamp(convertToEpoch(m.group(1)))
+                .actor(new LogEvent.Actor(m.group(2), m.group(3), m.group(4)))
+                .raw(line)
+                .eventType("medic_death_ex")
+                .uberPercentage(Integer.parseInt(m.group(5)))
+                .build();
     }
 
     private long convertToEpoch(String ts) {

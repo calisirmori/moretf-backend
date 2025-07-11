@@ -33,29 +33,14 @@ public class PassScoreAssistEventParser implements LogLineParser {
         Map<String, Object> extras = new HashMap<>();
         extras.put("position", m.group(5));
 
-        return new LogEvent(
-                eventId,
-                convertToEpoch(m.group(1)),
-                new LogEvent.Actor(m.group(2), sanitizeSteamId(m.group(3)), m.group(4)),
-                line,
-                "pass_score_assist",
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                extras
-        );
+        return LogEvent.builder()
+                .eventId(eventId)
+                .timestamp(convertToEpoch(m.group(1)))
+                .actor(new LogEvent.Actor(m.group(2), sanitizeSteamId(m.group(3)), m.group(4)))
+                .raw(line)
+                .eventType("pass_score_assist")
+                .extras(extras)
+                .build();
     }
 
     private long convertToEpoch(String ts) {

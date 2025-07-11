@@ -5,6 +5,7 @@ import com.moretf.model.LogUploadResult;
 import com.moretf.model.LogEvent;
 import com.moretf.LogMetaData.LogSummary;
 import com.moretf.model.MatchJsonResult;
+import com.moretf.repository.LogSummaryProcedureRepository;
 import com.moretf.repository.LogSummaryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,9 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class LogProcessingService {
+
+    @Autowired
+    private LogSummaryProcedureRepository logSummaryProcedureRepository;
 
     @Autowired
     private SummaryAggregatorService summaryAggregatorService;
@@ -88,7 +92,7 @@ public class LogProcessingService {
     private List<LogEvent> saveLogSummaryToDatabase(MultipartFile logfile, long logId, String title, String map) throws Exception {
         List<LogEvent> events = logParserService.parseFromResourceZipFile(logfile.getInputStream());
         LogSummary summary = LogMetaSummaryBuilder.extractMeta(logId, events, title, map);
-        logSummaryRepository.save(summary);
+        logSummaryProcedureRepository.insertLogViaProcedure(summary);
         return events;
     }
 

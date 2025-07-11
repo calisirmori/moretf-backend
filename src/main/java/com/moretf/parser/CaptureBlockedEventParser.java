@@ -42,29 +42,14 @@ public class CaptureBlockedEventParser implements LogLineParser {
         extras.put("cpname", cpName);
         extras.put("position", position);
 
-        return new LogEvent(
-                eventId,
-                convertToEpoch(timestampStr),
-                new LogEvent.Actor(actorName, actorSteam, actorTeam),
-                line,
-                "captureblocked",
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                extras
-        );
+        return LogEvent.builder()
+                .eventId(eventId)
+                .timestamp(convertToEpoch(timestampStr))
+                .actor(new LogEvent.Actor(actorName, actorSteam, actorTeam))
+                .raw(line)
+                .eventType("captureblocked")
+                .extras(extras)
+                .build();
     }
 
     private long convertToEpoch(String ts) {

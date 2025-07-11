@@ -62,29 +62,15 @@ public class PassBallStolenEventParser implements LogLineParser {
             }
         }
 
-        return new LogEvent(
-                eventId,
-                convertToEpoch(m.group(1)),
-                actor,
-                line,
-                "pass_ball_stolen",
-                target,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                extras
-        );
+        return LogEvent.builder()
+                .eventId(eventId)
+                .timestamp(convertToEpoch(m.group(1)))
+                .actor(actor)
+                .target(target)
+                .raw(line)
+                .eventType("pass_ball_stolen")
+                .extras(extras)
+                .build();
     }
 
     private long convertToEpoch(String ts) {

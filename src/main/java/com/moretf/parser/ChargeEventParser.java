@@ -39,29 +39,15 @@ public class ChargeEventParser implements LogLineParser {
                 ? Map.of(extraKey, extraValue)
                 : null;
 
-        return new LogEvent(
-                eventId,
-                convertToEpoch(timestampStr),
-                new LogEvent.Actor(actorName, actorSteam, actorTeam),
-                line,
-                eventType.toLowerCase(), // normalize to lowercase
-                null,
-                (extraKey != null && extraKey.equals("medigun")) ? extraValue : null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                extras
-        );
+        return LogEvent.builder()
+                .eventId(eventId)
+                .timestamp(convertToEpoch(timestampStr))
+                .actor(new LogEvent.Actor(actorName, actorSteam, actorTeam))
+                .raw(line)
+                .eventType(eventType.toLowerCase())
+                .weapon((extraKey != null && extraKey.equals("medigun")) ? extraValue : null)
+                .extras(extras)
+                .build();
     }
 
     private long convertToEpoch(String ts) {

@@ -53,29 +53,14 @@ public class FlagEventParser implements LogLineParser {
             }
         }
 
-        return new LogEvent(
-                eventId,
-                convertToEpoch(m.group(1)),
-                actor,
-                line,
-                "flagevent",
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                extras
-        );
+        return LogEvent.builder()
+                .eventId(eventId)
+                .timestamp(convertToEpoch(m.group(1)))
+                .actor(actor)
+                .raw(line)
+                .eventType("flagevent")
+                .extras(extras)
+                .build();
     }
 
     private long convertToEpoch(String ts) {

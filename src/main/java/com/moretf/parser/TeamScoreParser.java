@@ -37,29 +37,14 @@ public class TeamScoreParser implements LogLineParser {
         extras.put("score", score);
         extras.put("players", players);
 
-        return new LogEvent(
-                eventId,
-                convertToEpoch(timestampStr),
-                null,
-                line,
-                "team_" + scoreType + "_score",
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                extras
-        );
+
+        return LogEvent.builder()
+                .eventId(eventId)
+                .timestamp(convertToEpoch(m.group(1)))
+                .raw(line)
+                .eventType("team_" + scoreType + "_score")
+                .extras(extras)
+                .build();
     }
 
     private long convertToEpoch(String ts) {

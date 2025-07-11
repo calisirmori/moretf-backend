@@ -54,29 +54,15 @@ public class PassCaughtEventParser implements LogLineParser {
         extras.put("thrower_position", m.group(13));
         extras.put("catcher_position", m.group(14));
 
-        return new LogEvent(
-                eventId,
-                convertToEpoch(m.group(1)),
-                actor,
-                line,
-                "pass_pass_caught",
-                target,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                extras
-        );
+        return LogEvent.builder()
+                .eventId(eventId)
+                .timestamp(convertToEpoch(m.group(1)))
+                .actor(actor)
+                .target(target)
+                .raw(line)
+                .eventType("pass_pass_caught")
+                .extras(extras)
+                .build();
     }
 
     private long convertToEpoch(String ts) {

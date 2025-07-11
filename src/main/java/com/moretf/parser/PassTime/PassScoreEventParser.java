@@ -53,29 +53,14 @@ public class PassScoreEventParser implements LogLineParser {
             }
         }
 
-        return new LogEvent(
-                eventId,
-                convertToEpoch(timestamp),
-                new LogEvent.Actor(name, steamId, team),
-                line,
-                "pass_score",
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                extras
-        );
+        return LogEvent.builder()
+                .eventId(eventId)
+                .timestamp(convertToEpoch(m.group(1)))
+                .actor(new LogEvent.Actor(name, steamId, team))
+                .raw(line)
+                .eventType("pass_score")
+                .extras(extras)
+                .build();
     }
 
     private long convertToEpoch(String ts) {

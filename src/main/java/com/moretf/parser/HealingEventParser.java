@@ -43,29 +43,15 @@ public class HealingEventParser implements LogLineParser {
         Map<String, Object> extras = new HashMap<>();
         extras.put("healing", healing);
 
-        return new LogEvent(
-                eventId,
-                convertToEpoch(timestampStr),
-                new LogEvent.Actor(actorName, actorSteam, actorTeam),
-                line,
-                "healed",
-                new LogEvent.Target(targetName, targetSteam, targetTeam),
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                healing,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
-        );
+        return LogEvent.builder()
+                .eventId(eventId)
+                .timestamp(convertToEpoch(m.group(1)))
+                .actor(new LogEvent.Actor(actorName, actorSteam, actorTeam))
+                .target(new LogEvent.Target(targetName, targetSteam, targetTeam))
+                .healing(healing)
+                .raw(line)
+                .eventType("healed")
+                .build();
     }
 
     private long convertToEpoch(String ts) {

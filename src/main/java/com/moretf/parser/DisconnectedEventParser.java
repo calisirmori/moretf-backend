@@ -30,29 +30,14 @@ public class DisconnectedEventParser implements LogLineParser {
         String team = m.group(4);
         if (team == null || team.isEmpty()) team = "Unassigned"; // fallback for malformed logs
 
-        return new LogEvent(
-                eventId,
-                convertToEpoch(m.group(1)),
-                new LogEvent.Actor(m.group(2), m.group(3), team),
-                line,
-                "disconnected",
-                null,
-                null,
-                null,
-                null,
-                null,
-                m.group(5),
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
-        );
+        return LogEvent.builder()
+                .eventId(eventId)
+                .timestamp(convertToEpoch(m.group(1)))
+                .actor(new LogEvent.Actor(m.group(2), m.group(3), team))
+                .raw(line)
+                .eventType("disconnected")
+                .message(m.group(5))
+                .build();
     }
 
     private long convertToEpoch(String ts) {

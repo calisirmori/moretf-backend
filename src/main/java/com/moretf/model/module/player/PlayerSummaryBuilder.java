@@ -1,12 +1,15 @@
 package com.moretf.model.module.player;
 
 import com.moretf.model.LogEvent;
+
+import java.io.Console;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class PlayerSummaryBuilder {
     public static List<PlayerSummary> build(List<LogEvent> events) {
         Map<String, PlayerSummary> players = new HashMap<>();
+        List<UberWindow> activeUbers = new ArrayList<>();
 
         boolean gameIsActive = false;
         boolean gameIsPaused = false;
@@ -59,15 +62,27 @@ public class PlayerSummaryBuilder {
                         if (targetPlayer != null) targetPlayer.incrementDeaths();
 
                         //Class Specific Kill/Death Stats
-                        actingPlayer.getClassStats().get(actingPlayer.getCharacter()).incrementKills();
-                        if (targetPlayer != null) targetPlayer.getClassStats().get(targetPlayer.getCharacter()).incrementDeaths();
+                        String actingPlayerClassName = actingPlayer.getCharacter();
+                        ClassStats actingPlayerClassStats = actingPlayer.getClassStats().computeIfAbsent(actingPlayerClassName, k -> {
+                            ClassStats stats = new ClassStats();
+                            stats.setClassType(k);
+                            return stats;
+                        });
+                        actingPlayerClassStats.incrementKills();
+
+                        String targetPlayerClassName = targetPlayer.getCharacter();
+                        ClassStats targetPlayerClassStats = targetPlayer.getClassStats().computeIfAbsent(targetPlayerClassName, k -> {
+                            ClassStats stats = new ClassStats();
+                            stats.setClassType(k);
+                            return stats;
+                        });
+                        targetPlayerClassStats.incrementDeaths();
+
 
                         // Track Weapon Kills
-                        String activeClass = actingPlayer.getCharacter();
-                        ClassStats classStats = actingPlayer.getClassStats().get(activeClass);
                         String weapon = event.getWeapon();
                         if (weapon != null && !weapon.isEmpty()) {
-                            Map<String, WeaponStats> weaponMap = classStats.getWeaponStats();
+                            Map<String, WeaponStats> weaponMap = actingPlayerClassStats.getWeaponStats();
 
                             WeaponStats weaponStats = weaponMap.computeIfAbsent(weapon, w -> new WeaponStats());
                             weaponStats.incrementKills();
@@ -81,13 +96,59 @@ public class PlayerSummaryBuilder {
                         Map<String, Integer> deathSpread = targetPlayer.getDeathSpread();
                         deathSpread.put(attackerId, deathSpread.getOrDefault(attackerId, 0) + 1);
 
+                        // Track Kills by Class
+                        String victimClass = targetPlayer.getCharacter();
+                        actingPlayer.getKillsByClass().put(
+                                victimClass,
+                                actingPlayer.getKillsByClass().getOrDefault(victimClass, 0) + 1
+                        );
+
+                        // Track Death by Class
+                        if (targetPlayer != null) {
+                            String actingClass = actingPlayer.getCharacter();
+                            targetPlayer.getDeathsByClass().put(
+                                    actingClass,
+                                    targetPlayer.getDeathsByClass().getOrDefault(actingClass, 0) + 1
+                            );
+                        }
+
+                        // Deaths during Uber
+                        long killTime = event.getTimestamp();
+                        String victimTeam = targetPlayer.getTeam();
+
+                        boolean diedDuringEnemyUber = false;
+                        for (UberWindow uber : activeUbers) {
+                            if (!uber.team.equals(victimTeam) && uber.isWithinWindow(killTime)) {
+                                diedDuringEnemyUber = true;
+                                break;
+                            }
+                        }
+
+                        if (diedDuringEnemyUber) {
+                            targetPlayer.incrementDeathsDuringUber();
+                        }
+
                         break;
 
                     case "kill_assist":
                         actingPlayer.incrementAssists();
 
                         //Class Specific Assist Stats
-                        actingPlayer.getClassStats().get(actingPlayer.getCharacter()).incrementAssists();
+                        String assistingPlayerClassType = actingPlayer.getCharacter();
+                        ClassStats assistingPlayerClassStats = actingPlayer.getClassStats().computeIfAbsent(assistingPlayerClassType, k -> {
+                            ClassStats s = new ClassStats();
+                            s.setClassType(assistingPlayerClassType);
+                            return s;
+                        });
+                        assistingPlayerClassStats.incrementAssists();
+
+                        //Track Assist by Class
+                        victimClass = targetPlayer.getCharacter();
+                        actingPlayer.getAssistByClass().put(
+                                victimClass,
+                                actingPlayer.getAssistByClass().getOrDefault(victimClass, 0) + 1
+                        );
+
                         break;
 
                     case "damage":
@@ -99,8 +160,8 @@ public class PlayerSummaryBuilder {
                         if (targetPlayer != null) targetPlayer.addTaken(damageDealt);
 
                         // Class Specific Damage and Damage Taken Stats
-                        activeClass = actingPlayer.getCharacter();
-                        classStats = actingPlayer.getClassStats().get(activeClass);
+                        String activeClass = actingPlayer.getCharacter();
+                        ClassStats classStats = actingPlayer.getClassStats().get(activeClass);
                         if (classStats != null) {
                             classStats.addDamage(damageDealt);
 
@@ -118,6 +179,18 @@ public class PlayerSummaryBuilder {
                         Object headshotFlag = event.getExtras() != null ? event.getExtras().get("headshot") : null;
                         if ("1".equals(String.valueOf(headshotFlag))) {
                             actingPlayer.incrementHeadShots();
+                        }
+
+                        //Headshot Event
+                        Object airshotFlag = event.getExtras() != null ? event.getExtras().get("airshot") : null;
+                        if ("1".equals(String.valueOf(airshotFlag))) {
+                            actingPlayer.incrementAirShots();
+                        }
+
+                        //Backstab Event
+                        Object critFlag = event.getExtras() != null ? event.getExtras().get("crit") : null;
+                        if ("crit".equals(String.valueOf(critFlag)) && "spy".equals(actingPlayer.getCharacter()) && !"1".equals(String.valueOf(headshotFlag))) {
+                            actingPlayer.incrementBackStabs();
                         }
 
                         // Track damage dealt by this player to the target
@@ -162,13 +235,60 @@ public class PlayerSummaryBuilder {
 
                         break;
 
-                    case "chargedeployed":
+                    case "chargedeployed": {
+                        UberWindow window = new UberWindow(
+                                actingPlayer.getSteamId(),
+                                actingPlayer.getTeam(),
+                                event.getTimestamp()
+                        );
+                        activeUbers.add(window);
+
                         String weaponName = event.getWeapon();
                         Map<String, Integer> ubers = actingPlayer.getUbers();
                         ubers.put(weaponName, ubers.getOrDefault(weaponName, 0) + 1);
+
+                        String uberTeam = actingPlayer.getTeam();
+                        long uberTime = event.getTimestamp();
+
+                        // Look backward for kills within 5 seconds before Uber started
+                        // Look backward for kills within 5 seconds before Uber started
+                        for (LogEvent potentialKill : events) {
+                            if (!"kill".equals(potentialKill.getEventType())) continue;
+
+                            long killTimeStamp = potentialKill.getTimestamp();  // Only declare once here
+
+                            if (killTimeStamp < uberTime && (uberTime - killTimeStamp) <= 5000) {
+                                if (potentialKill.getTarget() != null) {
+                                    victimId = potentialKill.getTarget().getSteamId();
+                                    victimTeam = potentialKill.getTarget().getTeam();
+
+                                    if (!uberTeam.equals(victimTeam)) {
+                                        PlayerSummary victim = players.get(victimId);
+                                        if (victim != null) {
+                                            victim.incrementDeathsBeforeUber();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+
                         break;
+                    }
+
 
                     case "chargeended":
+
+                        long endTime = event.getTimestamp();
+                        String medicId = event.getActor().getSteamId();
+
+                        for (UberWindow activeWindow  : activeUbers) {
+                            if (activeWindow.medicSteamId.equals(medicId) && activeWindow.endTime == -1) {
+                                activeWindow.endTime = endTime;
+                                break;
+                            }
+                        }
+
                         double uberLength = Double.parseDouble(event.getExtras().get("duration").toString());
                         actingPlayer.addTotalUberLength(uberLength);
                         break;
@@ -183,7 +303,7 @@ public class PlayerSummaryBuilder {
                         break;
 
                     case "medic_death_ex":
-                        if (Integer.parseInt(event.getExtras().get("uberpct").toString()) >= 90){
+                        if (event.getUberPercentage() >= 90){
                             actingPlayer.incerementNearChargeDeaths();
                         }
                         break;
@@ -260,6 +380,40 @@ public class PlayerSummaryBuilder {
                         break;
                     }
 
+                    case "player_builtobject": {
+                        actingPlayer.incrementObjectsBuilt();
+                        break;
+                    }
+
+                    case "killedobject": {
+                        actingPlayer.incrementObjectsDestroyed();
+                        break;
+                    }
+
+                    case "pointcaptured": {
+                        Object cappersObj = event.getExtras() != null ? event.getExtras().get("cappers") : null;
+
+                        if (cappersObj instanceof List<?>) {
+                            List<?> cappers = (List<?>) cappersObj;
+
+                            for (Object capperObj : cappers) {
+                                if (!(capperObj instanceof Map<?, ?>)) continue;
+                                Map<?, ?> capper = (Map<?, ?>) capperObj;
+
+                                Object steamIdObj = capper.get("steamId");
+                                if (!(steamIdObj instanceof String)) continue;
+
+                                String capperId = (String) steamIdObj;
+                                PlayerSummary capperPlayer = players.get(capperId);
+                                if (capperPlayer != null) {
+                                    capperPlayer.incrementCaptures();
+                                }
+                            }
+                        }
+
+                        break;
+                    }
+
                 }
             }
         }
@@ -298,7 +452,6 @@ public class PlayerSummaryBuilder {
                 player.setTotalTime(totalCombinedTime);
             }
         }
-
 
         return players.values().stream()
                 .filter(player -> player.getTotalTime() >= 10)

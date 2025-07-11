@@ -24,29 +24,14 @@ public class ConnectedEventParser implements LogLineParser {
         Matcher m = PATTERN.matcher(line);
         if (!m.find()) return null;
 
-        return new LogEvent(
-                eventId,
-                convertToEpoch(m.group(1)),
-                new LogEvent.Actor(m.group(2), m.group(3), null),
-                line,
-                "connected",
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                m.group(4),
-                null
-        );
+        return LogEvent.builder()
+                .eventId(eventId)
+                .timestamp(convertToEpoch(m.group(1)))
+                .actor(new LogEvent.Actor(m.group(2), m.group(3), null))
+                .raw(line)
+                .eventType("connected")
+                .address(m.group(4))
+                .build();
     }
 
     private long convertToEpoch(String ts) {

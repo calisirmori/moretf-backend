@@ -30,29 +30,13 @@ public class EmptyUberEventParser implements LogLineParser {
         String actorSteam = m.group(3);
         String actorTeam = m.group(4);
 
-        return new LogEvent(
-                eventId,
-                convertToEpoch(timestampStr),
-                new LogEvent.Actor(actorName, actorSteam, actorTeam),
-                line,
-                "empty_uber",
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
-        );
+        return LogEvent.builder()
+                .eventId(eventId)
+                .timestamp(convertToEpoch(timestampStr))
+                .actor(new LogEvent.Actor(actorName, actorSteam, actorTeam))
+                .raw(line)
+                .eventType("empty_uber")
+                .build();
     }
 
     private long convertToEpoch(String ts) {

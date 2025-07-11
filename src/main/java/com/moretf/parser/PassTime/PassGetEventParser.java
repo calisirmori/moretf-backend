@@ -43,29 +43,14 @@ public class PassGetEventParser implements LogLineParser {
         extras.put("firstcontact", firstContact);
         extras.put("position", position);
 
-        return new LogEvent(
-                eventId,
-                convertToEpoch(timestamp),
-                new LogEvent.Actor(name, steamId, team),
-                line,
-                "pass_get",
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                extras
-        );
+        return LogEvent.builder()
+                .eventId(eventId)
+                .timestamp(convertToEpoch(m.group(1)))
+                .actor(new LogEvent.Actor(name, steamId, team))
+                .raw(line)
+                .eventType("pass_get")
+                .extras(extras)
+                .build();
     }
 
     private long convertToEpoch(String ts) {

@@ -26,29 +26,13 @@ public class DemosTfEventParser implements LogLineParser {
         Matcher m = PATTERN.matcher(line);
         if (!m.find()) return null;
 
-        return new LogEvent(
-                eventId,
-                convertToEpoch(m.group(1)),
-                null,
-                line,
-                "stv_available",
-                null,
-                null,
-                null,
-                null,
-                m.group(2),
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
-        );
+        return LogEvent.builder()
+                .eventId(eventId)
+                .timestamp(convertToEpoch(m.group(1)))
+                .raw(line)
+                .eventType("stv_available")
+                .message(m.group(2))
+                .build();
     }
 
     private long convertToEpoch(String ts) {

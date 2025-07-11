@@ -22,29 +22,14 @@ public class ConsoleSayEventParser implements LogLineParser {
         Matcher m = PATTERN.matcher(line);
         if (!m.find()) return null;
 
-        return new LogEvent(
-                eventId,
-                convertToEpoch(m.group(1)),
-                new LogEvent.Actor("Console", "Console", "Console"),
-                line,
-                "console_say",
-                null,
-                null,
-                null,
-                m.group(2),
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
-        );
+        return LogEvent.builder()
+                .eventId(eventId)
+                .timestamp(convertToEpoch(m.group(1)))
+                .actor(new LogEvent.Actor("Console", "Console", "Console"))
+                .raw(line)
+                .eventType("console_say")
+                .message(m.group(2))
+                .build();
     }
 
     private long convertToEpoch(String ts) {

@@ -40,29 +40,15 @@ public class KilledObjectEventParser implements LogLineParser {
         String targetSteam = m.group(7);
         String targetTeam = m.group(8);
 
-        return new LogEvent(
-                eventId,
-                convertToEpoch(timestampStr),
-                new LogEvent.Actor(actorName, actorSteam, actorTeam),
-                line,
-                "killedobject",
-                new LogEvent.Target(targetName, targetSteam, targetTeam),
-                weapon,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
-        );
+        return LogEvent.builder()
+                .eventId(eventId)
+                .timestamp(convertToEpoch(timestampStr))
+                .actor(new LogEvent.Actor(actorName, actorSteam, actorTeam))
+                .target(new LogEvent.Target(targetName, targetSteam, targetTeam))
+                .raw(line)
+                .eventType("killedobject")
+                .weapon(weapon)
+                .build();
     }
 
     private long convertToEpoch(String ts) {

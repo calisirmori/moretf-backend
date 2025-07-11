@@ -49,29 +49,17 @@ public class DamageEventParser implements LogLineParser {
         extras.remove("damage");
         extras.remove("weapon");
 
-        return new LogEvent(
-                eventId,
-                convertToEpoch(timestampStr),
-                new LogEvent.Actor(actorName, actorSteam, actorTeam),
-                line,
-                "damage",
-                new LogEvent.Target(targetName, targetSteam, targetTeam),
-                weapon,
-                damage,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                !extras.isEmpty() ? extras : null
-        );
+        return LogEvent.builder()
+                .eventId(eventId)
+                .timestamp(convertToEpoch(timestampStr))
+                .actor(new LogEvent.Actor(actorName, actorSteam, actorTeam))
+                .raw(line)
+                .eventType("damage")
+                .target(new LogEvent.Target(targetName, targetSteam, targetTeam))
+                .weapon(weapon)
+                .damage(damage)
+                .extras(!extras.isEmpty() ? extras : null)
+                .build();
     }
 
     private long convertToEpoch(String ts) {

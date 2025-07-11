@@ -42,29 +42,14 @@ public class DominationRevengeEventParser implements LogLineParser {
 
         String assist = m.group(9);  // Only for "domination", may be null
 
-        return new LogEvent(
-                eventId,
-                convertToEpoch(timestampStr),
-                new LogEvent.Actor(actorName, actorSteam, actorTeam),
-                line,
-                eventType,
-                new LogEvent.Target(targetName, targetSteam, targetTeam),
-                null,
-                null,
-                null,
-                null,
-                null,
-                assist,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
-        );
+        return LogEvent.builder()
+                .eventId(eventId)
+                .timestamp(convertToEpoch(timestampStr))
+                .actor(new LogEvent.Actor(actorName, actorSteam, actorTeam))
+                .raw(line)
+                .eventType(eventType)
+                .assist(assist)
+                .build();
     }
 
     private long convertToEpoch(String ts) {

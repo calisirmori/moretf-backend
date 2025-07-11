@@ -51,29 +51,15 @@ public class LiquidAttackEventParser implements LogLineParser {
         extras.put("attacker_position", attackerPos);
         extras.put("victim_position", victimPos);
 
-        return new LogEvent(
-                eventId,
-                convertToEpoch(timestamp),
-                new LogEvent.Actor(actorName, actorSteam, actorTeam),
-                line,
-                eventType,
-                new LogEvent.Target(targetName, targetSteam, targetTeam),
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                extras
-        );
+        return LogEvent.builder()
+                .eventId(eventId)
+                .timestamp(convertToEpoch(timestamp))
+                .actor(new LogEvent.Actor(actorName, actorSteam, actorTeam))
+                .target(new LogEvent.Target(targetName, targetSteam, targetTeam))
+                .raw(line)
+                .eventType(eventType)
+                .extras(extras)
+                .build();
     }
 
     private long convertToEpoch(String ts) {

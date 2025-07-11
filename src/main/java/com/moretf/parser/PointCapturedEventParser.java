@@ -55,29 +55,21 @@ public class PointCapturedEventParser implements LogLineParser {
 
         extras.put("cappers", cappers);
 
-        return new LogEvent(
-                eventId,
-                convertToEpoch(timestampStr),
-                null,
-                line,
-                "pointcaptured",
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                extras
-        );
+        // Derive capturing team from first capper (if available)
+        if (!cappers.isEmpty()) {
+            String capturingTeam = cappers.get(0).get("team");
+            if (capturingTeam != null) {
+                extras.put("capturingTeam", capturingTeam);
+            }
+        }
+
+        return LogEvent.builder()
+                .eventId(eventId)
+                .timestamp(convertToEpoch(timestampStr))
+                .raw(line)
+                .eventType("pointcaptured")
+                .extras(extras)
+                .build();
     }
 
     private long convertToEpoch(String ts) {

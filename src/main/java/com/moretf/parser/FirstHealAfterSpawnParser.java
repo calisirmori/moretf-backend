@@ -33,29 +33,14 @@ public class FirstHealAfterSpawnParser implements LogLineParser {
         String actorTeam = m.group(4);
         String timeStr = m.group(5);
 
-        return new LogEvent(
-                eventId,
-                convertToEpoch(timestampStr),
-                new LogEvent.Actor(actorName, actorSteam, actorTeam),
-                line,
-                "first_heal_after_spawn",
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                Map.of("time", timeStr)  // extras
-        );
+        return LogEvent.builder()
+                .eventId(eventId)
+                .timestamp(convertToEpoch(timestampStr))
+                .actor(new LogEvent.Actor(actorName, actorSteam, actorTeam))
+                .raw(line)
+                .time(timeStr)
+                .eventType("first_heal_after_spawn")
+                .build();
     }
 
     private long convertToEpoch(String ts) {

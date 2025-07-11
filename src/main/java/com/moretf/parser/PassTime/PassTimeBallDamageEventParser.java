@@ -35,29 +35,14 @@ public class PassTimeBallDamageEventParser implements LogLineParser {
         extras.put("damagetype", m.group(6));
         extras.put("inflictor_classname", m.group(7));
 
-        return new LogEvent(
-                eventId,
-                convertToEpoch(m.group(1)),
-                new LogEvent.Actor("passtime_ball", "ball", "neutral"),
-                line,
-                "pass_ball_damage",
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                extras
-        );
+        return LogEvent.builder()
+                .eventId(eventId)
+                .timestamp(convertToEpoch(m.group(1)))
+                .actor(new LogEvent.Actor("passtime_ball", "ball", "neutral"))
+                .raw(line)
+                .eventType("pass_ball_damage")
+                .extras(extras)
+                .build();
     }
 
     private long convertToEpoch(String ts) {

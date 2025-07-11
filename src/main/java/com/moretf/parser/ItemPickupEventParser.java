@@ -39,29 +39,15 @@ public class ItemPickupEventParser implements LogLineParser {
             healing = Integer.parseInt(healingStr);
         }
 
-        return new LogEvent(
-                eventId,
-                convertToEpoch(timestampStr),
-                new LogEvent.Actor(actorName, actorSteam, actorTeam),
-                line,
-                "item_pickup",
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                healing,
-                item,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
-        );
+        return LogEvent.builder()
+                .eventId(eventId)
+                .timestamp(convertToEpoch(m.group(1)))
+                .actor(new LogEvent.Actor(actorName, actorSteam, actorTeam))
+                .healing(healing)
+                .raw(line)
+                .eventType("item_pickup")
+                .item(item)
+                .build();
     }
 
     private long convertToEpoch(String ts) {
