@@ -37,7 +37,7 @@ public class LogSummaryProcedureRepositoryImpl implements LogSummaryProcedureRep
         query.setParameter("_format", summary.getFormat());
         query.setParameter("_map", summary.getMap());
         query.setParameter("_log_date", summary.getLogDate());
-        query.setParameter("_game_type", "None");  // <-- forced to "None"
+        query.setParameter("_game_type", "None");
         query.setParameter("_combined", summary.getCombined());
 
         query.execute();

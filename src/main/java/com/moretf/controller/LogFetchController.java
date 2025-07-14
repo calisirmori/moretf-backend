@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -47,10 +48,11 @@ public class LogFetchController {
             }
 
             // Step 3: Parse from S3
-            List<LogEvent> events = logParserService.parseFromS3(logId);
+            List<LogEvent> tempEvents = new ArrayList<>();
+            logParserService.streamFromS3(logId, tempEvents::add);
 
             // Step 4: Build cached version save and serve
-            MatchJsonResult cacheCopy = summaryAggregatorService.buildMatchJsonWithoutEvents(events, (int) logId, title, map);
+            MatchJsonResult cacheCopy = summaryAggregatorService.buildMatchJsonWithoutEvents(tempEvents, (int) logId, title, map);
 
             // Step 5: Save to Dynamo
             dynamoDbService.saveEphemeralMatchJson(logId, cacheCopy);

@@ -6,8 +6,10 @@ import com.moretf.service.LogParserService;
 import com.moretf.service.SummaryAggregatorService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
@@ -34,25 +36,6 @@ public class LogParseController {
         return String.format("%s/%d/%d/%d.log.zip", PREFIX, millions, hundredThousands, id);
     }
 
-    @GetMapping("/local-parse/{logId}")
-    public List<LogEvent> parseLogFromS3(@PathVariable String logId) {
-        long id;
-        try {
-            id = Long.parseLong(logId);
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Invalid numeric logId: " + logId);
-        }
-        String s3Key = resolveS3Key(id);
-        System.out.println("Attempting to load from S3 key: " + s3Key);
-        try (InputStream inputStream = s3Client.getObject(
-                GetObjectRequest.builder().bucket(BUCKET_NAME).key(s3Key).build()
-        )) {
-            return logParserService.parseFromResourceZipFile(inputStream);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to parse S3 log file: " + s3Key, e);
-        }
-    }
-
     @ResponseBody
     @GetMapping("/local-parse-full/{logId}")
     public ResponseEntity<?> parseFullMatchFromS3(@PathVariable String logId) {
@@ -68,7 +51,8 @@ public class LogParseController {
         try (InputStream inputStream = s3Client.getObject(
                 GetObjectRequest.builder().bucket(BUCKET_NAME).key(s3Key).build()
         )) {
-            List<LogEvent> events = logParserService.parseFromResourceZipFile(inputStream);
+            List<LogEvent> events = new ArrayList<>();
+            logParserService.streamFromResourceZipFile(inputStream, events::add);
             MatchJsonResult result = summaryAggregatorService.buildMatchJson(events, (int) id, null, null);
             return ResponseEntity.ok(result);
         } catch (NoSuchKeyException e) {
@@ -78,13 +62,5 @@ public class LogParseController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to parse S3 log file", "message", e.getMessage()));
         }
-    }
-
-
-    @GetMapping("/test/{logId}")
-    public List<LogEvent> parse100RandomFromS3(@PathVariable String logId) {
-        // Optional: List objects from S3 under the relevant prefix, sample randomly
-        // For now, just parse the provided logId to match structure
-        return parseLogFromS3(logId);
     }
 }

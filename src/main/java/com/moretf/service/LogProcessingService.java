@@ -5,8 +5,11 @@ import com.moretf.model.LogUploadResult;
 import com.moretf.model.LogEvent;
 import com.moretf.LogMetaData.LogSummary;
 import com.moretf.model.MatchJsonResult;
+import com.moretf.model.PlayerSummaryEntity;
 import com.moretf.repository.LogSummaryProcedureRepository;
 import com.moretf.repository.LogSummaryRepository;
+import com.moretf.repository.PlayerSummaryRepository;
+import com.moretf.util.MemoryMonitor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,6 +18,10 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.InputStream;
+import java.lang.management.GarbageCollectorMXBean;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -23,6 +30,9 @@ public class LogProcessingService {
 
     @Autowired
     private LogSummaryProcedureRepository logSummaryProcedureRepository;
+
+    @Autowired
+    private PlayerSummaryRepository playerSummaryRepository;
 
     @Autowired
     private SummaryAggregatorService summaryAggregatorService;
@@ -52,14 +62,37 @@ public class LogProcessingService {
         String s3Key = formatS3Key(logIdLong);
 
         // Step 1: Upload to S3
-        uploadLogToS3(logfile, s3Key);
+        //uploadLogToS3(logfile, s3Key);
 
+        MemoryMonitor.logMemoryUsage("Before Step 2");
         // Step 2: Parse and save summary to DB (and get events)
         List<LogEvent> events = saveLogSummaryToDatabase(logfile, logIdLong, title, map);
+        MemoryMonitor.logMemoryUsage("After Step 2");
 
         // Step 3: Store a stripped version in DynamoDB cache
-        MatchJsonResult cachedJson = summaryAggregatorService.buildMatchJsonWithoutEvents(events, (int) logIdLong, title, map);
-        dynamoDbService.saveEphemeralMatchJson(logIdLong, cachedJson);
+        //MatchJsonResult cachedJson = summaryAggregatorService.buildMatchJsonWithoutEvents(events, (int) logIdLong, title, map);
+        //dynamoDbService.saveEphemeralMatchJson(logIdLong, cachedJson);
+        MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
+        List<GarbageCollectorMXBean> gcBeans = ManagementFactory.getGarbageCollectorMXBeans();
+
+        long totalCollections = gcBeans.stream().mapToLong(GarbageCollectorMXBean::getCollectionCount).sum();
+        MemoryMonitor.logMemoryUsage("Before Step 4");
+        // Step 4: Insert player rows into `players` table
+        List<PlayerSummaryEntity> playerSummaries = summaryAggregatorService.buildPlayerSummaries(events, (int) logIdLong);
+        MemoryMonitor.logMemoryUsage("After Step 4");
+
+        System.out.println("[MEMORY] GC Count: " + totalCollections);
+        System.out.println("[MEMORY] Used Heap: " + memoryMXBean.getHeapMemoryUsage().getUsed() / (1024 * 1024) + "MB");
+
+        playerSummaryRepository.bulkInsert(playerSummaries);
+
+        playerSummaries.clear();
+        playerSummaries = null;
+
+        events.clear();
+        events = null;
+        // <--- NEW
+        System.gc();              // <--- optional
 
         return new LogUploadResult(logId);
     }
@@ -90,7 +123,11 @@ public class LogProcessingService {
     }
 
     private List<LogEvent> saveLogSummaryToDatabase(MultipartFile logfile, long logId, String title, String map) throws Exception {
-        List<LogEvent> events = logParserService.parseFromResourceZipFile(logfile.getInputStream());
+        List<LogEvent> events = new ArrayList<>();
+        logParserService.streamFromResourceZipFile(
+                logfile.getInputStream(),
+                events::add
+        );
         LogSummary summary = LogMetaSummaryBuilder.extractMeta(logId, events, title, map);
         logSummaryProcedureRepository.insertLogViaProcedure(summary);
         return events;

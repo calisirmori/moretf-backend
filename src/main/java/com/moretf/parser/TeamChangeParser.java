@@ -5,16 +5,14 @@ import com.moretf.model.LogEvent;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ClassChangeEventParser implements LogLineParser {
+public class TeamChangeParser implements LogLineParser {
 
     private static final Pattern PATTERN = Pattern.compile(
             "L (\\d+/\\d+/\\d+ - \\d+:\\d+:\\d+): " +
-                    "\"(.+?)<\\d+><(\\[U:1:\\d+\\])><(Red|Blue|unknown)>\" changed role to \"(\\w+)\""
+                    "\"(.+?)<\\d+><(\\[U:1:\\d+\\])><(Red|Blue|Spectator|Unassigned)>\" joined team \"(Red|Blue|Spectator|Unassigned)\""
     );
 
     @Override
@@ -24,22 +22,22 @@ public class ClassChangeEventParser implements LogLineParser {
 
     @Override
     public LogEvent parse(String line, int eventId) {
-        Matcher matcher = PATTERN.matcher(line);
-        if (!matcher.find()) return null;
+        Matcher m = PATTERN.matcher(line);
+        if (!m.find()) return null;
 
-        String timestampStr = matcher.group(1);
-        String actorName = matcher.group(2);
-        String actorSteam = matcher.group(3);
-        String actorTeam = matcher.group(4);
-        String className = matcher.group(5);
+        String timestampStr = m.group(1);
+        String name = m.group(2);
+        String steamId = m.group(3);
+        String oldTeam = m.group(4);
+        String newTeam = m.group(5);
 
         return LogEvent.builder()
                 .eventId(eventId)
                 .timestamp(convertToEpoch(timestampStr))
-                .actor(new LogEvent.Actor(actorName, actorSteam, actorTeam))
+                .actor(new LogEvent.Actor(name, steamId, oldTeam))
+                .eventType("team_change")
+                .team(newTeam)
                 .raw(line)
-                .eventType("class_change")
-                .character(className.toLowerCase())
                 .build();
     }
 

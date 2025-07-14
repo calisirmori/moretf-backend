@@ -13,8 +13,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -22,7 +22,7 @@ import java.util.zip.ZipOutputStream;
 @Service
 public class LogEventParsingManager {
     private final List<LogLineParser> parsers;
-    private final List<LogEvent> parsedEvents = new ArrayList<>();
+
     public LogEventParsingManager() {
         this.parsers = List.of(
                 new DamageEventParser(),
@@ -59,8 +59,9 @@ public class LogEventParsingManager {
                 new LiquidAttackEventParser(),
                 new PlayerObjectEventParser(),
                 new MedicDeathCombinedParser(),
+                new TeamChangeParser(),
 
-                // --- Passtime-specific parsers ---
+                // Passtime-specific
                 new PassCaughtEventParser(),
                 new PassFreeEventParser(),
                 new PassGetEventParser(),
@@ -69,54 +70,37 @@ public class LogEventParsingManager {
                 new PassTimeBallDamageEventParser(),
                 new PassBallStolenEventParser(),
 
-                // --- DemosTF-specific parser ---
+                // DemosTF-specific
                 new DemosTfEventParser()
-
         );
     }
 
-    public LogEvent parse(String line, int eventId) {
-        if (line.contains("position_report")
-                || line.contains("STEAM USERID validated")
-                || line.contains("Log file closed.")
-                || line.contains("Log file started")
-                || line.contains("passtime_ball took damage victim")
-                || line.contains("passtime_ball spawned")
-                || line.contains("Demos must be at least 5")
-                || line.contains("with m_filter on")
-                || line.contains("Printing for client:")
-                || line.contains("_catapult1\" with the jack")
-                || line.contains("Panacea check - Distance from top spawner:")
-                || line.contains("[SteamNetworkingSockets]")
-                || line.contains("_catapult2\" with the jack")
+    public List<LogEvent> parseLines(List<String> lines) {
+        List<LogEvent> result = new ArrayList<>();
+        int eventId = 0;
 
-        ) {
-            return null;
-        }
+        for (String line : lines) {
+            if (shouldIgnoreLine(line)) continue;
 
-        for (LogLineParser parser : parsers) {
-            if (parser.matches(line)) {
-                LogEvent parsed = parser.parse(line, eventId);
-                if (parsed != null) {
-                    parsedEvents.add(parsed);
+            for (LogLineParser parser : parsers) {
+                if (parser.matches(line)) {
+                    LogEvent event = parser.parse(line, eventId++);
+                    if (event != null) {
+                        result.add(event);
+                    }
+                    break;
                 }
-                return parsed;
             }
         }
-        System.out.println("[Unparsed] Event #" + eventId + ": " + line);
-        return null;
+
+        return result;
     }
 
-    public List<LogEvent> getParsedEvents() {
-        return parsedEvents;
-    }
-
-    public void saveParsedEventsToResources(String fileName) {
+    public void saveParsedEventsToZip(List<LogEvent> parsedEvents, String fileName) {
         try {
             String dir = "src/main/resources/logs";
             Files.createDirectories(Paths.get(dir));
 
-            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
             String jsonPath = dir + "/parsed_log_" + fileName + ".json";
             String zipPath = dir + "/parsed_log_" + fileName + ".zip";
 
@@ -134,4 +118,25 @@ public class LogEventParsingManager {
             e.printStackTrace();
         }
     }
+
+    public List<LogLineParser> getParsers() {
+        return this.parsers;
+    }
+
+    public boolean shouldIgnoreLine(String line) {
+        return line.contains("position_report")
+                || line.contains("STEAM USERID validated")
+                || line.contains("Log file closed.")
+                || line.contains("Log file started")
+                || line.contains("passtime_ball took damage victim")
+                || line.contains("passtime_ball spawned")
+                || line.contains("Demos must be at least 5")
+                || line.contains("with m_filter on")
+                || line.contains("Printing for client:")
+                || line.contains("_catapult1\" with the jack")
+                || line.contains("_catapult2\" with the jack")
+                || line.contains("Panacea check - Distance from top spawner:")
+                || line.contains("[SteamNetworkingSockets]");
+    }
+
 }

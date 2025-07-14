@@ -73,14 +73,29 @@ public class LogMetaSummaryBuilder {
         summary.setLogDate(logStart);
 
         // Format
-        summary.setFormat(steamIds.size() <= 12 ? "6v6" : "Highlander");
+        int size = steamIds.size();
+        if (size >= 17) {
+            summary.setFormat("HL");
+        } else if (size >= 11) {
+            summary.setFormat("6v6");
+        } else if (size >= 7) {
+            summary.setFormat("4v4");
+        } else {
+            summary.setFormat("OTH");
+        }
 
         // Game type
         summary.setGameType(null);
 
         // Combined if more than 1 game_over event
         long gameOverCount = events.stream().filter(e -> "game_over".equals(e.getEventType())).count();
-        summary.setCombined(String.valueOf(gameOverCount > 1));
+        if (gameOverCount == 0) {
+            summary.setCombined("unknown");
+        } else if (gameOverCount == 1) {
+            summary.setCombined("false");
+        } else {
+            summary.setCombined("true");
+        }
 
         return summary;
     }

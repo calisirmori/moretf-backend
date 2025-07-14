@@ -1,6 +1,7 @@
 package com.moretf.service;
 
 import com.moretf.model.LogEvent;
+import com.moretf.parser.LogLineParser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -10,6 +11,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.zip.ZipInputStream;
 
 @Service
@@ -24,37 +26,43 @@ public class LogParserService {
     private static final String BUCKET_NAME = "moretf-logs-bucket";
     private static final String PREFIX = "logs";
 
-    public List<LogEvent> parseFromResourceZipFile(InputStream inputStream) {
-        List<LogEvent> events = new ArrayList<>();
-
+    public void streamFromResourceZipFile(InputStream inputStream, Consumer<LogEvent> eventConsumer) {
         try (ZipInputStream zis = new ZipInputStream(inputStream);
              BufferedReader reader = new BufferedReader(new InputStreamReader(zis, StandardCharsets.UTF_8))) {
 
-            zis.getNextEntry(); // Open the first entry inside the zip
+            zis.getNextEntry(); // Assume only one entry in ZIP
 
             String line;
             int eventCounter = 1;
             while ((line = reader.readLine()) != null) {
-                LogEvent event = parsingManager.parse(line, eventCounter++);
-                if (event != null) {
-                    events.add(event);
+                if (!parsingManager.shouldIgnoreLine(line)) {
+                    for (LogLineParser parser : parsingManager.getParsers()) {
+                        if (parser.matches(line)) {
+                            LogEvent event = parser.parse(line, eventCounter++);
+                            if (event != null) {
+                                eventConsumer.accept(event);
+                            }
+                            break; // stop at first matching parser
+                        }
+                    }
                 }
             }
+
 
         } catch (IOException e) {
             throw new RuntimeException("Error parsing from input stream", e);
         }
 
-        return events;
+
     }
 
-    public List<LogEvent> parseFromS3(long logId) throws IOException {
+    public void streamFromS3(long logId, Consumer<LogEvent> eventConsumer) throws IOException {
         String s3Key = resolveS3Key(logId);
         try (InputStream inputStream = s3Client.getObject(GetObjectRequest.builder()
                 .bucket(BUCKET_NAME)
                 .key(s3Key)
                 .build())) {
-            return parseFromResourceZipFile(inputStream);
+            streamFromResourceZipFile(inputStream, eventConsumer);
         }
     }
 

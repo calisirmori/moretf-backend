@@ -41,21 +41,31 @@ public class MatchSummaryBuilder {
                     roundPauseTime = 0;
                     break;
 
+                case "round_stalemate":
+                    if (roundStart != null) {
+                        int roundLength = (int) ((event.getTimestamp() - roundStart - roundPauseTime) / 1000);
+                        RoundInfo roundInfo = new RoundInfo(roundLength, "Stalemate");
+
+                        totalMatchDuration += roundLength;
+                        rounds.put(roundNumber++, roundInfo);
+                    }
+                    roundStart = null;
+                    roundPauseTime = 0;
+                    break;
+
                 case "round_win":
                     String winner = event.getExtras() != null ? event.getExtras().get("winner").toString() : null;
-                    if (winner != null && roundStart != null) {
+                    if (winner != null) {
                         if (winner.equalsIgnoreCase("Red")) redScore++;
                         else bluScore++;
 
-                        int roundLength = (int) ((event.getTimestamp() - roundStart - roundPauseTime) / 1000);
+                        if (roundStart != null) {
+                            int roundLength = (int) ((event.getTimestamp() - roundStart - roundPauseTime) / 1000);
+                            RoundInfo roundInfo = new RoundInfo(roundLength, winner);
 
-                        RoundInfo roundInfo = new RoundInfo(roundLength, winner);
-
-                        //Match Duration
-                        totalMatchDuration += (int) roundLength;
-
-                        //Rounds
-                        rounds.put(roundNumber++, roundInfo);
+                            totalMatchDuration += roundLength;
+                            rounds.put(roundNumber++, roundInfo);
+                        }
 
                         roundStart = null;
                         roundPauseTime = 0;
@@ -74,7 +84,7 @@ public class MatchSummaryBuilder {
             }
         }
 
-        String matchWinner = bluScore > redScore ? "Blu" : redScore > bluScore ? "Red" : "Tie";
+        String matchWinner = bluScore > redScore ? "Blue" : redScore > bluScore ? "Red" : "Tie";
 
         // Step 1: Try from RDS logs table
         if (title == null || title.isBlank() || map == null || map.isBlank()) {
@@ -115,7 +125,7 @@ public class MatchSummaryBuilder {
                 redScore,
                 bluScore,
                 totalMatchDuration,
-                gameOverEvents > 1,
+                gameOverEvents == 1 ? "false" : gameOverEvents == 0 ? "unknown" : "true",
                 rounds
         );
     }

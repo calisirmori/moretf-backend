@@ -18,6 +18,6 @@ public class MatchSummary {
     private int scoreRed;
     private int scoreBlue;
     private int durationSeconds;
-    private boolean combined;
+    private String combined;
     private Map<Integer, RoundInfo> rounds;
 }

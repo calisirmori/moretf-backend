@@ -13,6 +13,7 @@ public class PlayerSummaryBuilder {
 
         boolean gameIsActive = false;
         boolean gameIsPaused = false;
+        int count = 0;
         for (LogEvent event : events) {
 
             switch (event.getEventType()) {
@@ -21,6 +22,7 @@ public class PlayerSummaryBuilder {
                     break;
 
                 case "round_win":
+                case "round_stalemate":
                 case "game_over":
                     gameIsActive = false;
                     break;
@@ -36,25 +38,41 @@ public class PlayerSummaryBuilder {
 
             if (event.getActor() == null || event.getActor().getSteamId() == null) continue;
             String steamId = event.getActor().getSteamId();
-            players.putIfAbsent(steamId,
-                    new PlayerSummary(
-                            event.getActor().getName(),
-                            steamId,
-                            event.getActor().getTeam()
-                    )
-            );
+            String name = event.getActor().getName();
+            String team = event.getActor().getTeam();
 
-            if (gameIsActive && !gameIsPaused) {
+            players.compute(steamId, (key, existing) -> {
+                String newTeam = (event.getEventType().equals("team_change") || event.getEventType().equals("joined_team"))
+                        ? event.getNewTeam()
+                        : team;
+
+                if (existing == null) {
+                    return new PlayerSummary(name, steamId, newTeam);
+                } else {
+                    // Always update if this is an explicit team change event
+                    if ((event.getEventType().equals("team_change") || event.getEventType().equals("joined_team"))
+                            && newTeam != null && (newTeam.equals("Red") || newTeam.equals("Blue"))) {
+                        existing.setTeam(newTeam);
+                    }
+                    return existing;
+                }
+            });
+
+            if (gameIsActive) {
                 PlayerSummary actingPlayer = players.get(steamId);
                 PlayerSummary targetPlayer = null;
                 String attackerId = actingPlayer.getSteamId();
                 String victimId = null;
 
-                if (event.getTarget() != null){
-                    targetPlayer = players.get(event.getTarget().getSteamId());
-                    victimId = targetPlayer.getSteamId();
+                if (event.getTarget() != null) {
+                    String targetSteamId = event.getTarget().getSteamId();
+                    targetPlayer = players.get(targetSteamId);
+                    if (targetPlayer != null) {
+                        victimId = targetPlayer.getSteamId();
+                    } else {
+                        continue;
+                    }
                 }
-
                 switch (event.getEventType()) {
                     case "kill":
                         //Primary Kill Stats
@@ -118,7 +136,7 @@ public class PlayerSummaryBuilder {
 
                         boolean diedDuringEnemyUber = false;
                         for (UberWindow uber : activeUbers) {
-                            if (!uber.team.equals(victimTeam) && uber.isWithinWindow(killTime)) {
+                            if (uber.team != null && !uber.team.equals(victimTeam) && uber.isWithinWindow(killTime)) {
                                 diedDuringEnemyUber = true;
                                 break;
                             }
@@ -201,6 +219,19 @@ public class PlayerSummaryBuilder {
                         Map<String, Integer> takenMap = targetPlayer.getDamageTakenSpread();
                         takenMap.put(attackerId, takenMap.getOrDefault(attackerId, 0) + damageDealt);
 
+                        // Healing from damage-based sources (e.g., Black Box, Crossbow, etc.)
+                        Integer heal = event.getHealing();
+                        if (heal != null && heal > 0) {
+                            actingPlayer.addHealing(heal);
+
+                            if (targetPlayer != null) {
+                                Map<String, Integer> healingMap = targetPlayer.getHealedBySource();
+                                healingMap.put(actingPlayer.getSteamId(), healingMap.getOrDefault(actingPlayer.getSteamId(), 0) + heal);
+                            }
+
+                            Map<String, Integer> healedMap = actingPlayer.getHealingDoneSpread();
+                            healedMap.put(victimId, healedMap.getOrDefault(victimId, 0) + heal);
+                        }
                         break;
 
                     case "item_pickup":
@@ -262,7 +293,7 @@ public class PlayerSummaryBuilder {
                                     victimId = potentialKill.getTarget().getSteamId();
                                     victimTeam = potentialKill.getTarget().getTeam();
 
-                                    if (!uberTeam.equals(victimTeam)) {
+                                    if (uberTeam != null && !uberTeam.equals(victimTeam)) {
                                         PlayerSummary victim = players.get(victimId);
                                         if (victim != null) {
                                             victim.incrementDeathsBeforeUber();
@@ -325,6 +356,15 @@ public class PlayerSummaryBuilder {
                             actingPlayer.setClassStartTime(eventTimestamp);
                         }
                         break;
+                    case "joined_team":
+                    case "team_change": {
+                        // Handle team assignment override
+                        String newTeam = event.getNewTeam();
+                        if (newTeam != null && (newTeam.equals("Red") || newTeam.equals("Blue"))) {
+                            actingPlayer.setTeam(newTeam);
+                        }
+                        break;
+                    }
 
                     case "class_change":
                         String newClass = event.getCharacter();
@@ -416,6 +456,8 @@ public class PlayerSummaryBuilder {
 
                 }
             }
+
+
         }
         // Calculations after game ended
         if (!events.isEmpty()) {
@@ -453,8 +495,10 @@ public class PlayerSummaryBuilder {
             }
         }
 
+        activeUbers.clear();
+
         return players.values().stream()
-                .filter(player -> player.getTotalTime() >= 10)
+                .filter(player -> player.getTotalTime() >= 10 && !player.getCharacter().equals("undefined"))
                 .collect(Collectors.toList());
     }
 }
