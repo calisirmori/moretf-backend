@@ -1,7 +1,12 @@
 package com.moretf.service;
 
 import com.moretf.dto.UserProfileDTO;
-import com.moretf.repository.*;
+import com.moretf.repository.activity.ActivityRepository;
+import com.moretf.repository.classstats.ClassStatsRepository;
+import com.moretf.repository.mapstats.MapStatsRepository;
+import com.moretf.repository.peers.PeerRepository;
+import com.moretf.repository.players.PlayerInfoRepository;
+import com.moretf.repository.recentmatch.RecentMatchRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

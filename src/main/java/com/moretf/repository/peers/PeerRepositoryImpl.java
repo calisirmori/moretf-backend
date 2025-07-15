@@ -1,6 +1,5 @@
-package com.moretf.repository;
+package com.moretf.repository.peers;
 
-import com.moretf.dto.UserProfileDTO;
 import com.moretf.dto.UserProfileDTO.PeerEntry;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;

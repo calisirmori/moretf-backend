@@ -1,4 +1,4 @@
-package com.moretf.repository;
+package com.moretf.repository.mapstats;
 
 import com.moretf.dto.UserProfileDTO.MapStats;
 import java.util.Map;

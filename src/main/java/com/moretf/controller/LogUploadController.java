@@ -1,7 +1,7 @@
 package com.moretf.controller;
 
 import com.moretf.model.ApiKey;
-import com.moretf.repository.ApiKeyRepository;
+import com.moretf.repository.api.ApiKeyRepository;
 import com.moretf.service.LogProcessingService;
 import com.moretf.model.LogUploadResult;
 import com.moretf.util.MemoryMonitor;

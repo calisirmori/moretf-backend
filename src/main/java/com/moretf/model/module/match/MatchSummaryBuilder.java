@@ -1,10 +1,8 @@
 package com.moretf.model.module.match;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.moretf.LogMetaData.LogSummary;
-import com.moretf.client.LogsTfApiClient;
 import com.moretf.model.LogEvent;
-import com.moretf.repository.LogSummaryRepository;
+import com.moretf.repository.logs.LogSummaryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

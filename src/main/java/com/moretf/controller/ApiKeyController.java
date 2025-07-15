@@ -1,7 +1,7 @@
 package com.moretf.controller;
 
 import com.moretf.model.ApiKey;
-import com.moretf.repository.ApiKeyRepository;
+import com.moretf.repository.api.ApiKeyRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 

@@ -1,4 +1,4 @@
-package com.moretf.repository;
+package com.moretf.repository.peers;
 
 import com.moretf.dto.UserProfileDTO.PeerEntry;
 import java.util.List;

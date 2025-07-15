@@ -1,4 +1,4 @@
-package com.moretf.repository;
+package com.moretf.repository.logs;
 
 import com.moretf.LogMetaData.LogSummary;
 import org.springframework.data.jpa.repository.JpaRepository;

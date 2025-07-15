@@ -2,7 +2,7 @@ package com.moretf.controller;
 
 import com.moretf.model.LogEvent;
 import com.moretf.model.MatchJsonResult;
-import com.moretf.repository.LogSummaryRepository;
+import com.moretf.repository.logs.LogSummaryRepository;
 import com.moretf.service.DynamoDbService;
 import com.moretf.service.LogParserService;
 import com.moretf.service.SummaryAggregatorService;

@@ -1,4 +1,4 @@
-package com.moretf.repository;
+package com.moretf.repository.api;
 
 import com.moretf.model.ApiKey;
 import jakarta.transaction.Transactional;

@@ -1,4 +1,4 @@
-package com.moretf.repository;
+package com.moretf.repository.activity;
 
 import com.moretf.dto.UserProfileDTO.DailyActivity;
 import jakarta.persistence.EntityManager;

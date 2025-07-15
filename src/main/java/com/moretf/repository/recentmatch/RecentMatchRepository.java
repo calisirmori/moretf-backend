@@ -1,4 +1,4 @@
-package com.moretf.repository;
+package com.moretf.repository.recentmatch;
 
 import com.moretf.dto.UserProfileDTO.RecentMatch;
 import java.util.List;

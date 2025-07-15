@@ -1,4 +1,4 @@
-package com.moretf.repository;
+package com.moretf.repository.players;
 
 import com.moretf.model.PlayerSummaryEntity;
 import org.springframework.stereotype.Repository;

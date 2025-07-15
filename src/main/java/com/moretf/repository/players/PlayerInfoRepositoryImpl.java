@@ -1,4 +1,4 @@
-package com.moretf.repository;
+package com.moretf.repository.players;
 
 import com.moretf.dto.UserProfileDTO;
 import jakarta.persistence.EntityManager;
