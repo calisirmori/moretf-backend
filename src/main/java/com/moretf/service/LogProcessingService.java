@@ -91,8 +91,8 @@ public class LogProcessingService {
 
         events.clear();
         events = null;
-        // <--- NEW
-        System.gc();              // <--- optional
+
+        System.gc();
 
         return new LogUploadResult(logId);
     }

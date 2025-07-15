@@ -95,10 +95,11 @@ public class SummaryAggregatorService {
                     dtm,
                     dt,
                     p.getHealing(),
+                    p.getTotalTime(),
                     p.getCharacter().toLowerCase(),
                     p.getTeam(),
                     p.getName(),
-                    p.getTeam().equals(winner) ? "W" : "L",
+                    p.getTeam().equals(winner) ? "W" : "Tie".equals(winner) ? "T" : "L",
                     steamId64,
                     logId
             );

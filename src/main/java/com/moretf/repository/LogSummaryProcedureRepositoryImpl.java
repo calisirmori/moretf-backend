@@ -36,7 +36,10 @@ public class LogSummaryProcedureRepositoryImpl implements LogSummaryProcedureRep
         query.setParameter("_players", summary.getPlayers());
         query.setParameter("_format", summary.getFormat());
         query.setParameter("_map", summary.getMap());
+        //During backlogging use match end date
         query.setParameter("_log_date", summary.getLogDate());
+        //During production use log upload date
+        //query.setParameter("_log_date", summary.getLogUploadDate());
         query.setParameter("_game_type", "None");
         query.setParameter("_combined", summary.getCombined());
 

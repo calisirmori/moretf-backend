@@ -96,29 +96,6 @@ public class LogEventParsingManager {
         return result;
     }
 
-    public void saveParsedEventsToZip(List<LogEvent> parsedEvents, String fileName) {
-        try {
-            String dir = "src/main/resources/logs";
-            Files.createDirectories(Paths.get(dir));
-
-            String jsonPath = dir + "/parsed_log_" + fileName + ".json";
-            String zipPath = dir + "/parsed_log_" + fileName + ".zip";
-
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.writerWithDefaultPrettyPrinter().writeValue(new File(jsonPath), parsedEvents);
-
-            try (ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(zipPath))) {
-                zipOut.putNextEntry(new ZipEntry("parsed_log.json"));
-                byte[] jsonBytes = Files.readAllBytes(Paths.get(jsonPath));
-                zipOut.write(jsonBytes);
-                zipOut.closeEntry();
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     public List<LogLineParser> getParsers() {
         return this.parsers;
     }

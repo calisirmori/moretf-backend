@@ -15,8 +15,8 @@ public class PlayerSummaryRepositoryImpl implements PlayerSummaryRepository {
 
     @Override
     public void bulkInsert(List<PlayerSummaryEntity> players) {
-        String sql = "INSERT INTO players (kills, assists, deaths, dpm, damage, dtm, dt, heals, \"class\", team, player_name, match_result, id64, logid) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO players (kills, assists, deaths, dpm, damage, dtm, dt, heals, player_class, team, player_name, match_result, id64, logid, time_played) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         jdbcTemplate.batchUpdate(sql, players, 100, (ps, p) -> {
             ps.setInt(1, p.getKills());
@@ -33,6 +33,7 @@ public class PlayerSummaryRepositoryImpl implements PlayerSummaryRepository {
             ps.setString(12, p.getMatchResult());
             ps.setLong(13, p.getId64());
             ps.setLong(14, p.getLogid());
+            ps.setInt(15, p.getTimePlayed());
         });
     }
 }

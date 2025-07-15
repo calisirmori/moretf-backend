@@ -83,25 +83,49 @@ public class MatchSummaryBuilder {
                     break;
             }
         }
-
+        // Determine winner from score
         String matchWinner = bluScore > redScore ? "Blue" : redScore > bluScore ? "Red" : "Tie";
 
         // Step 1: Try from RDS logs table
-        if (title == null || title.isBlank() || map == null || map.isBlank()) {
+        LogSummary fetchedSummary = null;
+        if ((title == null || title.isBlank()) || (map == null || map.isBlank())) {
             try {
                 Optional<LogSummary> optional = logSummaryRepository.findById((long) logId);
                 if (optional.isPresent()) {
-                    LogSummary summary = optional.get();
-                    if ((title == null || title.isBlank()) && summary.getTitle() != null) {
-                        title = summary.getTitle();
+                    fetchedSummary = optional.get();
+                    if ((title == null || title.isBlank()) && fetchedSummary.getTitle() != null) {
+                        title = fetchedSummary.getTitle();
                     }
-                    if ((map == null || map.isBlank()) && summary.getMap() != null) {
-                        map = summary.getMap();
+                    if ((map == null || map.isBlank()) && fetchedSummary.getMap() != null) {
+                        map = fetchedSummary.getMap();
                     }
                 }
             } catch (Exception e) {
                 System.err.println("Warning: failed to fetch title/map from DB for logId " + logId);
             }
+        }
+
+        String summaryMap = map != null ? map : (fetchedSummary != null ? fetchedSummary.getMap() : null);
+
+        if (summaryMap != null && (summaryMap.startsWith("pl_") || summaryMap.startsWith("cp_steel")) && rounds.size() == 2) {
+            if (redScore == 0 && bluScore == 2) {
+                matchWinner = "Blue";
+            } else if (redScore == 2 && bluScore == 0) {
+                matchWinner = "Red";
+            } else if (redScore == 1 && bluScore == 1) {
+                RoundInfo firstRound = rounds.get(1);
+                if ("Blue".equalsIgnoreCase(firstRound.getWinner())) {
+                    matchWinner = "Red";
+                } else if ("Red".equalsIgnoreCase(firstRound.getWinner())) {
+                    matchWinner = "Blue";
+                } else {
+                    matchWinner = "Tie";
+                }
+            } else {
+                matchWinner = "Tie";
+            }
+        }
+
 
 //            // Step 2: Fallback to Logs.tf API
 //            if (title == null || title.isBlank() || map == null || map.isBlank()) {
@@ -113,8 +137,6 @@ public class MatchSummaryBuilder {
 //                    map = info.get("map").asText();
 //                }
 //            }
-        }
-
 
         return new MatchSummary(
                 logId,

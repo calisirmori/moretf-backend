@@ -2,6 +2,7 @@ package com.moretf.LogMetaData;
 
 import com.moretf.model.LogEvent;
 
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -69,8 +70,12 @@ public class LogMetaSummaryBuilder {
         summary.setMap(mapOverride != null ? mapOverride : "unknown");
 
         // Date
-        long logStart = events.get(0).getTimestamp();
-        summary.setLogDate(logStart);
+        long logEnd = events.get(events.size() - 1).getTimestamp();
+        summary.setLogDate(logEnd);
+
+//        // Upload date
+//        long dateTimeNow = new Date().getTime();
+//        summary.setLogDate(dateTimeNow);
 
         // Format
         int size = steamIds.size();

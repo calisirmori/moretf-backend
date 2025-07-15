@@ -6,7 +6,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class PlayerSummaryEntity {
-    private int kills, assists, deaths, dpm, damage, dtm, dt, heals;
+    private int kills, assists, deaths, dpm, damage, dtm, dt, heals, timePlayed;
     private String playerClass, team, playerName, matchResult;
     private long id64;
     private long logid;
