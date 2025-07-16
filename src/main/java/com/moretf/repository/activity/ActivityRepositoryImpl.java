@@ -35,4 +35,25 @@ public class ActivityRepositoryImpl implements ActivityRepository {
 
         return activityList;
     }
+
+    @Override
+    public List<DailyActivity> findAllActivity(String id64) {
+        String sql = "SELECT * FROM get_player_activity_all(:id64)";
+        Query query = entityManager.createNativeQuery(sql);
+        query.setParameter("id64", id64);
+
+        List<Object[]> rows = query.getResultList();
+        List<DailyActivity> activityList = new ArrayList<>();
+
+        for (Object[] row : rows) {
+            DailyActivity a = new DailyActivity();
+            a.activityDate = row[0].toString();            a.totalMatches = ((Number) row[1]).intValue();
+            a.wins = ((Number) row[2]).intValue();
+            a.losses = ((Number) row[3]).intValue();
+            a.ties = ((Number) row[4]).intValue();
+            activityList.add(a);
+        }
+
+        return activityList;
+    }
 }

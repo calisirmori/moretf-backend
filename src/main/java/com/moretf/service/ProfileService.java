@@ -6,7 +6,7 @@ import com.moretf.repository.classstats.ClassStatsRepository;
 import com.moretf.repository.mapstats.MapStatsRepository;
 import com.moretf.repository.peers.PeerRepository;
 import com.moretf.repository.players.PlayerInfoRepository;
-import com.moretf.repository.recentmatch.RecentMatchRepository;
+import com.moretf.repository.recentmatch.LogListRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,7 +18,7 @@ public class ProfileService {
     private final MapStatsRepository mapStatsRepository;
     private final PlayerInfoRepository playerInfoRepository;
     private final ClassStatsRepository classStatsRepository;
-    private final RecentMatchRepository recentMatchRepository;
+    private final LogListRepository logListRepository;
     private final ActivityRepository activityRepository;
     private final PeerRepository peerRepository;  // ✅ NEW
 
@@ -26,14 +26,14 @@ public class ProfileService {
             MapStatsRepository mapStatsRepository,
             PlayerInfoRepository playerInfoRepository,
             ClassStatsRepository classStatsRepository,
-            RecentMatchRepository recentMatchRepository,
+            LogListRepository logListRepository,
             ActivityRepository activityRepository,
             PeerRepository peerRepository // ✅ NEW
     ) {
         this.mapStatsRepository = mapStatsRepository;
         this.playerInfoRepository = playerInfoRepository;
         this.classStatsRepository = classStatsRepository;
-        this.recentMatchRepository = recentMatchRepository;
+        this.logListRepository = logListRepository;
         this.activityRepository = activityRepository;
         this.peerRepository = peerRepository;
     }
@@ -43,7 +43,7 @@ public class ProfileService {
 
         dto.mapStats = mapStatsRepository.findByUserId(id64);
         dto.classStats = classStatsRepository.findTopByUserId(id64);
-        dto.recentMatches = recentMatchRepository.findByUserId(id64);
+        dto.recentMatches = logListRepository.findByUserId(id64);
         dto.activity = activityRepository.findRecentActivity(id64);
 
         var profileAndStats = playerInfoRepository.getProfileAndStats(id64);
