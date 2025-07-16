@@ -8,11 +8,11 @@ import java.util.List;
 import java.util.Map;
 
 public class UserProfileDTO {
+    public Profile profile;
+    public OverallStats overallStats;
+    public List<RecentMatch> recentMatches;
     public Map<String, MapStats> mapStats;
     public Map<String, ClassStats> classStats;
-    public OverallStats overallStats;
-    public Profile profile;
-    public List<RecentMatch> recentMatches;
     public List<DailyActivity> activity;
     public List<PeerEntry> topPeers;
     public List<PeerEntry> topEnemies;
