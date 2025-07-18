@@ -21,6 +21,7 @@ public class PlayByPlayEvent {
     private Map<String, Integer> targetPlayerLocation;
     private String weapon;
     private String eventType;
+    private String message;
     private Integer scoreRed;
     private Integer scoreBlue;
 }

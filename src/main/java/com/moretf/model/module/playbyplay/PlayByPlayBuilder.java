@@ -37,7 +37,7 @@ public class PlayByPlayBuilder {
                             event.getTimestamp(),
                             convertToClock(event.getTimestamp(), matchStartTime),
                             null, null, null, null, null,
-                            null, "round_start",
+                            null, "round_start", null,
                             scoreRed, scoreBlue
                     ));
                     break;
@@ -78,10 +78,24 @@ public class PlayByPlayBuilder {
                     playByPlay.add(winEvent);
                     break;
 
+                case "game_over":
+                case "game_paused":
+                case "game_unpaused":
+                    PlayByPlayEvent gameEvent = new PlayByPlayEvent();
+                    gameEvent.setTimestamp(event.getTimestamp());
+                    gameEvent.setClock(convertToClock(event.getTimestamp(), matchStartTime));
+                    gameEvent.setEventType(type);
+                    playByPlay.add(gameEvent);
+                    break;
+
+
                 case "kill":
                 case "chargedeployed":
                 case "chargeended":
                 case "chargeready":
+                case "say":
+                case "say_team":
+                case "disconnected":
                 case "pointcaptured": {
                     if (!gameActive) break;
 
@@ -89,6 +103,8 @@ public class PlayByPlayBuilder {
                     pbe.setTimestamp(event.getTimestamp());
                     pbe.setClock(convertToClock(event.getTimestamp(), matchStartTime));
                     pbe.setEventType(type);
+
+                    if(event.getMessage() != null) pbe.setMessage(event.getMessage());
 
                     if (event.getActor() != null) {
                         pbe.setTeam(event.getActor().getTeam());
