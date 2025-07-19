@@ -24,11 +24,11 @@ public class SteamOpenIdController {
     @Autowired
     private SecretManagerService secretManagerService;
     private final String STEAM_OPENID_URL = "https://steamcommunity.com/openid/login";
-    private final String REALM = "http://localhost:8080"; // change to www.more.tf in prod
-    private final String RETURN_TO = "http://localhost:8080/auth/verify";
-//    private final String REALM = "https://api.more.tf";
-//    private final String RETURN_TO = "https://api.more.tf/auth/verify";
-    private final String FRONT_END = "http://localhost:5173";
+//    private final String REALM = "http://localhost:8080"; // change to www.more.tf in prod
+//    private final String RETURN_TO = "http://localhost:8080/auth/verify";
+    private final String REALM = "https://api.more.tf";
+    private final String RETURN_TO = "https://api.more.tf/auth/verify";
+    private final String FRONT_END = "https://test.more.tf";
 
     @GetMapping("/login")
     public void login(@RequestParam(value = "state", required = false) String state, HttpServletResponse response) throws IOException {
