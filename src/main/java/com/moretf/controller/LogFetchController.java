@@ -4,6 +4,7 @@ import com.moretf.model.LogEvent;
 import com.moretf.model.MatchJsonResult;
 import com.moretf.repository.logs.LogSummaryRepository;
 import com.moretf.service.DynamoDbService;
+import com.moretf.service.LogCommendService;
 import com.moretf.service.LogParserService;
 import com.moretf.service.SummaryAggregatorService;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -27,18 +29,29 @@ public class LogFetchController {
     private final LogParserService logParserService; // Your logic to parse from S3
     private final SummaryAggregatorService summaryAggregatorService;
     private final LogSummaryRepository logSummaryRepository;
+    private final LogCommendService logCommendService;
 
     @GetMapping("/{logId}")
-    public ResponseEntity<?> getLogById(@PathVariable long logId) {
+    public ResponseEntity<?> getLogById(@PathVariable long logId, Principal principal) {
         // Step 1: Check cache
         MatchJsonResult cached = dynamoDbService.getCachedMatchJson(logId);
         if (cached != null) {
-            return ResponseEntity.ok(cached);
+            // Attach commend data before returning
+            Map<String, Integer> commendCounts = logCommendService.getCommendCounts(String.valueOf(logId));
+            Map<String, Boolean> userStatus = principal != null
+                    ? logCommendService.getCommendStatus(String.valueOf(logId), principal.getName())
+                    : Map.of();
+
+            Map<String, Object> response = Map.of(
+                    "data", cached,
+                    "commendCounts", commendCounts,
+                    "commendStatus", userStatus
+            );
+            return ResponseEntity.ok(response);
         }
 
-        // Step 2: Parse from S3
         try {
-            // Step 2: Get title/map from RDS if available
+            // Load title/map from RDS
             String title = null;
             String map = null;
             var optionalSummary = logSummaryRepository.findById(logId);
@@ -47,21 +60,34 @@ public class LogFetchController {
                 map = optionalSummary.get().getMap();
             }
 
-            // Step 3: Parse from S3
+            // Parse S3 log events
             List<LogEvent> tempEvents = new ArrayList<>();
             logParserService.streamFromS3(logId, tempEvents::add);
 
-            // Step 4: Build cached version save and serve
+            // Build summary
             MatchJsonResult cacheCopy = summaryAggregatorService.buildMatchJsonWithoutEvents(tempEvents, (int) logId, title, map);
 
-            // Step 5: Save to Dynamo
+            // Save to Dynamo
             dynamoDbService.saveEphemeralMatchJson(logId, cacheCopy);
 
-            return ResponseEntity.ok(cacheCopy);
+            // Enrich with commend data
+            Map<String, Integer> commendCounts = logCommendService.getCommendCounts(String.valueOf(logId));
+            Map<String, Boolean> userStatus = principal != null
+                    ? logCommendService.getCommendStatus(String.valueOf(logId), principal.getName())
+                    : Map.of();
+
+            Map<String, Object> response = Map.of(
+                    "data", cacheCopy,
+                    "commendCounts", commendCounts,
+                    "commendStatus", userStatus
+            );
+            return ResponseEntity.ok(response);
+
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to process logId " + logId, "details", e.getMessage()));
         }
     }
+
 }
 
