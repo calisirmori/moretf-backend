@@ -13,7 +13,7 @@ public class LogSummaryProcedureRepositoryImpl implements LogSummaryProcedureRep
     private EntityManager entityManager;
 
     @Override
-    public void insertLogViaProcedure(LogSummary summary) {
+    public void insertLogViaProcedure(LogSummary summary, String uploader) {
         StoredProcedureQuery query = entityManager.createStoredProcedureQuery("public.insert_log");
 
         query.registerStoredProcedureParameter("_logid", Long.class, jakarta.persistence.ParameterMode.IN);
@@ -27,6 +27,7 @@ public class LogSummaryProcedureRepositoryImpl implements LogSummaryProcedureRep
         query.registerStoredProcedureParameter("_log_date", Long.class, jakarta.persistence.ParameterMode.IN);
         query.registerStoredProcedureParameter("_game_type", String.class, jakarta.persistence.ParameterMode.IN);
         query.registerStoredProcedureParameter("_combined", String.class, jakarta.persistence.ParameterMode.IN);
+        query.registerStoredProcedureParameter("_uploader_info", String.class, jakarta.persistence.ParameterMode.IN);
 
         query.setParameter("_logid", summary.getLogid());
         query.setParameter("_title", summary.getTitle());
@@ -42,7 +43,7 @@ public class LogSummaryProcedureRepositoryImpl implements LogSummaryProcedureRep
         //query.setParameter("_log_date", summary.getLogUploadDate());
         query.setParameter("_game_type", "None");
         query.setParameter("_combined", summary.getCombined());
-
+        query.setParameter("_uploader_info", uploader);
         query.execute();
     }
 }

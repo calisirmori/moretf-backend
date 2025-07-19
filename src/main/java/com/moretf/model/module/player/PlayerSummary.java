@@ -11,6 +11,7 @@ import java.util.Map;
 public class PlayerSummary {
     private String name;
     private String steamId;
+    private String steamId64;
     private String team;
     private int kills;
     private int assists;
@@ -52,6 +53,7 @@ public class PlayerSummary {
     public PlayerSummary(String name, String steamId, String team) {
         this.name = name;
         this.steamId = steamId;
+        this.steamId64 = steamId3ToSteamId64(steamId);
         this.team = team;
         this.kills = 0;
         this.assists = 0;
@@ -149,4 +151,14 @@ public class PlayerSummary {
     public void incrementDeathsBeforeUber(){this.deathsBeforeUber++;}
 
     public void incrementDeathsDuringUber(){this.deathsDuringUber++;}
+
+    public static String steamId3ToSteamId64(String steamId3) {
+        try {
+            String trimmed = steamId3.replace("[U:1:", "").replace("]", "");
+            long accountId = Long.parseLong(trimmed);
+            return String.valueOf(accountId + 76561197960265728L);
+        } catch (Exception e) {
+            return null;
+        }
+    }
 }

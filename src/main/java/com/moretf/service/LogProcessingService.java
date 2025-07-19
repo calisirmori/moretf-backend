@@ -63,27 +63,19 @@ public class LogProcessingService {
         // Step 1: Upload to S3
         //uploadLogToS3(logfile, s3Key);
 
-        MemoryMonitor.logMemoryUsage("Before Step 2");
         // Step 2: Parse and save summary to DB (and get events)
-        List<LogEvent> events = saveLogSummaryToDatabase(logfile, logIdLong, title, map);
-        MemoryMonitor.logMemoryUsage("After Step 2");
+        List<LogEvent> events = saveLogSummaryToDatabase(logfile, logIdLong, title, map, uploader);
 
         // Step 3: Store a stripped version in DynamoDB cache
         //MatchJsonResult cachedJson = summaryAggregatorService.buildMatchJsonWithoutEvents(events, (int) logIdLong, title, map);
         //dynamoDbService.saveEphemeralMatchJson(logIdLong, cachedJson);
-        MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
-        List<GarbageCollectorMXBean> gcBeans = ManagementFactory.getGarbageCollectorMXBeans();
 
-        long totalCollections = gcBeans.stream().mapToLong(GarbageCollectorMXBean::getCollectionCount).sum();
-        MemoryMonitor.logMemoryUsage("Before Step 4");
         // Step 4: Insert player rows into `players` table
         List<PlayerSummaryEntity> playerSummaries = summaryAggregatorService.buildPlayerSummaries(events, (int) logIdLong);
-        MemoryMonitor.logMemoryUsage("After Step 4");
 
-        System.out.println("[MEMORY] GC Count: " + totalCollections);
-        System.out.println("[MEMORY] Used Heap: " + memoryMXBean.getHeapMemoryUsage().getUsed() / (1024 * 1024) + "MB");
-
+        MemoryMonitor.logMemoryUsage("Before Step 5");
         playerSummaryRepository.bulkInsert(playerSummaries);
+        MemoryMonitor.logMemoryUsage("After Step 5");
 
         playerSummaries.clear();
         playerSummaries = null;
@@ -121,14 +113,14 @@ public class LogProcessingService {
         }
     }
 
-    private List<LogEvent> saveLogSummaryToDatabase(MultipartFile logfile, long logId, String title, String map) throws Exception {
+    private List<LogEvent> saveLogSummaryToDatabase(MultipartFile logfile, long logId, String title, String map, String uploader) throws Exception {
         List<LogEvent> events = new ArrayList<>();
         logParserService.streamFromResourceZipFile(
                 logfile.getInputStream(),
                 events::add
         );
         LogSummary summary = LogMetaSummaryBuilder.extractMeta(logId, events, title, map);
-        logSummaryProcedureRepository.insertLogViaProcedure(summary);
+        logSummaryProcedureRepository.insertLogViaProcedure(summary, uploader);
         return events;
     }
 

@@ -18,6 +18,7 @@ public class PlayerSummaryRepositoryImpl implements PlayerSummaryRepository {
         String sql = "INSERT INTO players (kills, assists, deaths, dpm, damage, dtm, dt, heals, player_class, team, player_name, match_result, id64, logid, time_played) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
+        System.out.println("Starting bulk insert: " + players.size());
         jdbcTemplate.batchUpdate(sql, players, 100, (ps, p) -> {
             ps.setInt(1, p.getKills());
             ps.setInt(2, p.getAssists());
@@ -35,5 +36,6 @@ public class PlayerSummaryRepositoryImpl implements PlayerSummaryRepository {
             ps.setLong(14, p.getLogid());
             ps.setInt(15, p.getTimePlayed());
         });
+        System.out.println("Bulk insert finished");
     }
 }
